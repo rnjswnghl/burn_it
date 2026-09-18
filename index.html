@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f2f0e9" />
+    <meta name="description" content="태우고 싶은 것을 불꽃으로 지워내는 감각적인 미니게임, Burn IT." />
+    <title>BurnIT</title>
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="paper-noise" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Burn IT 처음으로">
+        <span class="brand-mark" aria-hidden="true">♨</span>
+        <span>Burn <em>IT</em></span>
+      </a>
+      <div class="identity">
+        <label class="sr-only" for="nickname">닉네임</label>
+        <input id="nickname" maxlength="18" autocomplete="nickname" aria-describedby="name-status" />
+        <button id="dice-button" class="icon-button" type="button" aria-label="랜덤 닉네임 다시 만들기" title="새 이름 굴리기">
+          <span class="dice" aria-hidden="true">⚄</span>
+        </button>
+        <button id="sound-button" class="icon-button sound-button" type="button" aria-label="불소리 켜기" aria-pressed="false">
+          <span aria-hidden="true">◒</span><span class="sound-label">SOUND OFF</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section id="intro-screen" class="intro-screen" aria-labelledby="intro-title">
+        <div class="intro-copy">
+          <p class="kicker">A SMALL RITUAL FOR HEAVY THINGS</p>
+          <h1 id="intro-title">그냥, <em>태워버려.</em></h1>
+          <p class="intro-description">붙잡고 있던 생각도, 보기 싫은 이미지도.<br />불을 붙이고 재가 될 때까지 바라보세요.</p>
+          <button id="enter-button" class="primary-button" type="button">
+            <span>성냥 꺼내기</span><span aria-hidden="true">↗</span>
+          </button>
+        </div>
+        <div class="intro-art" aria-hidden="true">
+          <span class="scribble scribble-one"></span>
+          <span class="scribble scribble-two"></span>
+          <div class="matchbox">
+            <div class="matchbox-label">BURN<br /><em>IT</em></div>
+            <div class="match-strike"></div>
+          </div>
+          <div class="loose-match"><i></i></div>
+          <p class="hand-note">for the things<br />you can let go</p>
+        </div>
+      </section>
+
+      <section id="game-screen" class="game-screen" hidden aria-labelledby="game-title">
+        <div class="game-heading">
+          <div>
+            <p class="kicker">CHOOSE YOUR FUEL</p>
+            <h1 id="game-title">오늘은 뭘 <em>태울까요?</em></h1>
+          </div>
+          <p id="greeting" class="greeting"></p>
+        </div>
+
+        <div class="mode-switch" role="tablist" aria-label="태우기 모드">
+          <button id="preset-tab" class="mode-tab active" type="button" role="tab" aria-selected="true">준비된 것</button>
+          <button id="upload-tab" class="mode-tab" type="button" role="tab" aria-selected="false">내 이미지</button>
+        </div>
+
+        <div class="workbench">
+          <aside class="source-panel" aria-label="태울 대상 선택">
+            <div id="preset-panel" class="preset-list">
+              <button class="preset active" type="button" data-preset="deadline">
+                <span class="preset-number">01</span><span><strong>마감</strong><small>자꾸만 따라오는 것</small></span>
+              </button>
+              <button class="preset" type="button" data-preset="worry">
+                <span class="preset-number">02</span><span><strong>걱정</strong><small>아직 일어나지 않은 것</small></span>
+              </button>
+              <button class="preset" type="button" data-preset="message">
+                <span class="preset-number">03</span><span><strong>그 메시지</strong><small>다시 읽지 않을 것</small></span>
+              </button>
+            </div>
+            <div id="upload-panel" class="upload-panel" hidden>
+              <input id="file-input" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+              <button id="upload-zone" class="upload-zone" type="button">
+                <span class="upload-arrow" aria-hidden="true">↑</span>
+                <strong>이미지 올려놓기</strong>
+                <small>JPG, PNG, WEBP · 최대 10MB</small>
+              </button>
+              <p class="privacy-note">이미지는 이 브라우저 안에서만 처리됩니다.</p>
+            </div>
+          </aside>
+
+          <section class="burn-stage" aria-label="불태우기 영역">
+            <div class="stage-meta"><span id="stage-label">SUBJECT 01 · DEADLINE</span><span id="burn-percent">0% BURNED</span></div>
+            <div id="canvas-wrap" class="canvas-wrap">
+              <canvas id="burn-canvas" width="900" height="620" aria-label="불태울 이미지"></canvas>
+              <canvas id="fx-canvas" width="900" height="620" aria-hidden="true"></canvas>
+              <div id="match-cursor" class="match-cursor" aria-hidden="true"><i></i></div>
+              <p id="stage-hint" class="stage-hint">성냥으로 종이를 문질러 불을 붙이세요</p>
+            </div>
+            <div class="stage-controls">
+              <p id="burn-status" aria-live="polite">아직 아무것도 타지 않았어요.</p>
+              <button id="reset-button" class="text-button" type="button">처음부터 ↺</button>
+            </div>
+          </section>
+        </div>
+
+        <section class="history" aria-labelledby="history-title">
+          <div><p class="kicker">YOUR ASHES</p><h2 id="history-title">지난 기록</h2></div>
+          <ol id="history-list"></ol>
+        </section>
+      </section>
+    </main>
+
+    <footer><span>© BURN IT</span><span>무거운 것은 가볍게, 뜨거운 것은 안전하게.</span></footer>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
