@@ -5,8 +5,14 @@ const adjectives = ["고요한", "단단한", "느긋한", "새벽의", "용감�
 const nouns = ["성냥", "잿가루", "모닥불", "종이학", "고양이", "연기", "부싯돌", "달빛", "장작", "불씨"];
 const storageKey = "burnit:user:v1";
 const historyKey = "burnit:history:v1";
-let user = JSON.parse(localStorage.getItem(storageKey) || "null") || { id: crypto.randomUUID(), nickname: "" };
-let history = JSON.parse(localStorage.getItem(historyKey) || "[]");
+function readLocal(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key) || "null") || fallback; }
+  catch { return fallback; }
+}
+let user = readLocal(storageKey, { id: crypto.randomUUID(), nickname: "" });
+let history = readLocal(historyKey, []);
+let pendingNickname = "";
+let rouletteSpinning = false;
 let currentMode = "preset";
 let currentPreset = "deadline";
 let sourceImage = null;
@@ -34,21 +40,81 @@ coverage.width = 180;
 coverage.height = 124;
 const coverageCtx = coverage.getContext("2d", { willReadFrequently: true });
 
-function randomName() {
-  let candidate;
-  do candidate = `${adjectives[Math.floor(Math.random() * adjectives.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]}${Math.floor(Math.random() * 90 + 10)}`;
-  while (candidate === user.nickname);
-  return candidate;
+function pick(list) { return list[Math.floor(Math.random() * list.length)]; }
+
+function randomNameParts() {
+  let parts;
+  do parts = { adjective: pick(adjectives), noun: pick(nouns), number: String(Math.floor(Math.random() * 90 + 10)) };
+  while (`${parts.adjective} ${parts.noun}${parts.number}` === user.nickname);
+  return parts;
 }
 
-if (!user.nickname) user.nickname = randomName();
-$("#nickname").value = user.nickname;
-saveUser();
+function randomName() {
+  const parts = randomNameParts();
+  return `${parts.adjective} ${parts.noun}${parts.number}`;
+}
 
 function saveUser() {
   localStorage.setItem(storageKey, JSON.stringify(user));
   $("#greeting").textContent = `${user.nickname}님, 오늘의 무거운 것을 여기 두고 가세요.`;
 }
+
+function showIntro() {
+  document.body.classList.remove("onboarding");
+  $("#nickname-screen").hidden = true;
+  $("#intro-screen").hidden = false;
+  $("#game-screen").hidden = true;
+}
+
+function showNicknameOnboarding() {
+  document.body.classList.add("onboarding");
+  $("#nickname-screen").hidden = false;
+  $("#intro-screen").hidden = true;
+  $("#game-screen").hidden = true;
+}
+
+function pulseReel(reel, values, stopAfter, finalValue) {
+  reel.classList.remove("spinning");
+  void reel.offsetWidth;
+  reel.classList.add("spinning");
+  const timer = setInterval(() => { reel.querySelector("span").textContent = pick(values); }, 72);
+  setTimeout(() => {
+    clearInterval(timer);
+    reel.querySelector("span").textContent = finalValue;
+    reel.classList.remove("spinning");
+  }, stopAfter);
+}
+
+function spinRoulette() {
+  if (rouletteSpinning) return;
+  rouletteSpinning = true;
+  pendingNickname = "";
+  $("#accept-name-button").disabled = true;
+  $("#roulette-result").textContent = "이름을 고르는 중…";
+  $(".slot-machine")?.classList.add("is-spinning");
+  const parts = randomNameParts();
+  pulseReel($("#adjective-reel"), adjectives, 850, parts.adjective);
+  pulseReel($("#noun-reel"), nouns, 1080, parts.noun);
+  pulseReel($("#number-reel"), Array.from({ length: 90 }, (_, index) => String(index + 10)), 1320, parts.number);
+  setTimeout(() => {
+    pendingNickname = `${parts.adjective} ${parts.noun}${parts.number}`;
+    $("#roulette-result").innerHTML = `오늘의 이름은 <strong>${pendingNickname}</strong>`;
+    $("#accept-name-button").disabled = false;
+    $(".slot-machine")?.classList.remove("is-spinning");
+    rouletteSpinning = false;
+  }, 1360);
+}
+
+$("#lever-button").addEventListener("click", spinRoulette);
+$("#spin-button").addEventListener("click", spinRoulette);
+$("#accept-name-button").addEventListener("click", () => {
+  if (!pendingNickname || rouletteSpinning) return;
+  user.nickname = pendingNickname;
+  $("#nickname").value = user.nickname;
+  saveUser();
+  showIntro();
+  showToast(`${user.nickname}님, 기억해둘게요.`);
+});
 
 $("#nickname").addEventListener("change", (event) => {
   const value = event.target.value.trim();
@@ -70,6 +136,15 @@ $("#dice-button").addEventListener("click", () => {
     showToast(`${user.nickname}, 꽤 괜찮은 이름이에요.`);
   }, 480);
 });
+
+if (user.nickname) {
+  $("#nickname").value = user.nickname;
+  saveUser();
+  showIntro();
+} else {
+  $("#nickname").value = "";
+  showNicknameOnboarding();
+}
 
 $("#enter-button").addEventListener("click", () => {
   $("#intro-screen").hidden = true;

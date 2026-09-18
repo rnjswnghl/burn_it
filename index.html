@@ -29,7 +29,40 @@
     </header>
 
     <main>
-      <section id="intro-screen" class="intro-screen" aria-labelledby="intro-title">
+      <section id="nickname-screen" class="nickname-screen" hidden aria-labelledby="nickname-title">
+        <div class="nickname-copy">
+          <p class="kicker">FIRST, PICK A NAME</p>
+          <h1 id="nickname-title">오늘의 이름을<br /><em>굴려보세요.</em></h1>
+          <p>로그인하지 않아도 괜찮아요.<br />이 이름과 태운 기록은 이 브라우저에만 남습니다.</p>
+        </div>
+        <div class="roulette-area">
+          <div class="slot-machine" aria-live="polite" aria-label="랜덤 닉네임 룰렛">
+            <div class="slot-window">
+              <div id="adjective-reel" class="slot-reel"><span>고요한</span></div>
+            </div>
+            <div class="slot-window">
+              <div id="noun-reel" class="slot-reel"><span>불씨</span></div>
+            </div>
+            <div class="slot-window number-window">
+              <div id="number-reel" class="slot-reel"><span>23</span></div>
+            </div>
+            <button id="lever-button" class="slot-lever" type="button" aria-label="닉네임 룰렛 돌리기">
+              <span class="lever-stick" aria-hidden="true"></span>
+              <span class="lever-knob" aria-hidden="true"></span>
+            </button>
+          </div>
+          <p id="roulette-result" class="roulette-result">레버를 당겨 이름을 만들어보세요.</p>
+          <div class="roulette-actions">
+            <button id="spin-button" class="text-button spin-button" type="button">한 번 굴리기 ↻</button>
+            <button id="accept-name-button" class="primary-button" type="button" disabled>
+              <span>이 이름으로 시작</span><span aria-hidden="true">↗</span>
+            </button>
+          </div>
+          <p class="local-note"><span aria-hidden="true">○</span> NO ACCOUNT · LOCAL ONLY</p>
+        </div>
+      </section>
+
+      <section id="intro-screen" class="intro-screen" hidden aria-labelledby="intro-title">
         <div class="intro-copy">
           <p class="kicker">A SMALL RITUAL FOR HEAVY THINGS</p>
           <h1 id="intro-title">그냥, <em>태워버려.</em></h1>
