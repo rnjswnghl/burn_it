@@ -24,11 +24,30 @@ const { chromium } = require("C:/Users/Admin/.cache/codex-runtimes/codex-primary
     const y = box.y + box.height * (.62 + Math.sin(i * .42) * .16);
     await page.mouse.move(x, y, { steps: 2 });
   }
-  await page.waitForTimeout(650);
+  await page.mouse.up();
+  const clickX = box.x + box.width * .64;
+  const clickY = box.y + box.height * .56;
+  for (let i = 0; i < 4; i++) {
+    await page.mouse.click(clickX, clickY, { delay: 18 });
+    await page.waitForTimeout(55);
+  }
+  const comboText = await page.locator("#burn-status").textContent();
+  if (!comboText.includes("연속 4번 점화")) throw new Error(`연속 클릭 강화가 반영되지 않았습니다: ${comboText}`);
+  const frameRate = await page.evaluate(() => new Promise((resolve) => {
+    let frames = 0;
+    const started = performance.now();
+    const tick = (now) => {
+      frames++;
+      if (now - started >= 1000) resolve(frames);
+      else requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }));
+  if (frameRate < 35) throw new Error(`불꽃 렌더링이 느립니다: ${frameRate}fps`);
+  await page.waitForTimeout(180);
   await page.screenshot({ path: "screenshots/burnit-fire-roaring.png", fullPage: true });
   const burnPercent = Number((await page.locator("#burn-percent").textContent()).replace(/\D/g, ""));
   if (!(burnPercent > 0)) throw new Error("불태우기 진행률이 증가하지 않았습니다.");
-  await page.mouse.up();
 
   for (const selector of ['[data-preset="meeting"]', '[data-preset="workload"]']) {
     await page.locator(selector).click();
@@ -36,7 +55,7 @@ const { chromium } = require("C:/Users/Admin/.cache/codex-runtimes/codex-primary
   }
   if ((await page.locator("#stage-label").textContent()) !== "SUBJECT 03 · THE WORKLOAD") throw new Error("업무 더미 장면 전환에 실패했습니다.");
 
-  console.log(JSON.stringify({ defaultScene: "overtime office", alternateScenes: 2, pointer: "fire", burnPercent, screenshots: 2 }, null, 2));
+  console.log(JSON.stringify({ defaultScene: "overtime office", alternateScenes: 2, pointer: "fire", repeatedIgnition: comboText, frameRate, burnPercent, screenshots: 2 }, null, 2));
   await browser.close();
 })().catch((error) => {
   console.error(error);

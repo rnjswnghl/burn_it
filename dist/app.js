@@ -26,6 +26,10 @@ let muted = true;
 let renderLoopStarted = false;
 let burnPercent = 0;
 let coverageTick = 0;
+let lastFrameAt = 0;
+let ignitionCombo = { count: 0, time: 0, x: 0, y: 0 };
+let comboMessage = "";
+let comboMessageUntil = 0;
 
 const canvas = $("#burn-canvas");
 const fx = $("#fx-canvas");
@@ -176,7 +180,7 @@ $$('.preset').forEach((button) => button.addEventListener("click", () => {
 
 function paperBase() {
   octx.clearRect(0, 0, original.width, original.height);
-  octx.fillStyle = "#faf9f5";
+  octx.fillStyle = "#ffffff";
   octx.fillRect(0, 0, original.width, original.height);
   for (let i = 0; i < 1150; i++) {
     const shade = Math.floor(Math.random() * 45 + 120);
@@ -335,6 +339,40 @@ function canvasPoint(event) {
   return { x: (event.clientX - rect.left) * canvas.width / rect.width, y: (event.clientY - rect.top) * canvas.height / rect.height };
 }
 
+function addParticle(x, y, power = 1) {
+  particles.push({
+    x: x + (Math.random() - .5) * 18 * power,
+    y,
+    vx: (Math.random() - .5) * (2.4 + power),
+    vy: -Math.random() * (3.6 + power * 1.3) - 1,
+    life: 34 + Math.random() * (38 + power * 12),
+    ember: Math.random() > .3,
+  });
+}
+
+function igniteAt(point, power = 1, burst = false) {
+  const count = burst ? Math.min(2 + Math.floor(power * 1.4), 7) : 1;
+  for (let index = 0; index < count; index++) {
+    const spread = burst ? 11 + power * 7 : 0;
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * spread;
+    const x = point.x + Math.cos(angle) * distance;
+    const y = point.y + Math.sin(angle) * distance;
+    burnPoints.push({
+      x, y,
+      radius: 8 + power * 2,
+      maxRadius: 62 + Math.random() * 30 + power * 12,
+      life: 0,
+      seed: Math.random() * 900,
+      phase: Math.random() * Math.PI * 2,
+      power,
+    });
+  }
+  const sparks = burst ? Math.min(12 + Math.floor(power * 9), 42) : 6;
+  for (let i = 0; i < sparks; i++) addParticle(point.x, point.y, power);
+  if (particles.length > 160) particles.splice(0, particles.length - 160);
+}
+
 const wrap = $("#canvas-wrap");
 wrap.addEventListener("pointerenter", () => $("#fire-cursor").style.opacity = 1);
 wrap.addEventListener("pointerleave", () => { $("#fire-cursor").style.opacity = 0; burning = false; lastPoint = null; });
@@ -344,15 +382,24 @@ wrap.addEventListener("pointermove", (event) => {
   cursor.style.left = `${event.clientX - rect.left - 21}px`; cursor.style.top = `${event.clientY - rect.top - 40}px`;
   if (!burning || completed) return;
   const point = canvasPoint(event);
-  if (!lastPoint || Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y) > 6) {
-    burnPoints.push({ ...point, radius: 8, maxRadius: 68 + Math.random() * 42, life: 0, seed: Math.random() * 900, phase: Math.random() * Math.PI * 2 });
-    for (let i = 0; i < 10; i++) particles.push({ x: point.x + (Math.random() - .5) * 20, y: point.y, vx: (Math.random() - .5) * 3.2, vy: -Math.random() * 4.8 - 1.2, life: 44 + Math.random() * 64, ember: Math.random() > .28 });
+  if (!lastPoint || Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y) > 14) {
+    igniteAt(point, 1, false);
     lastPoint = point;
   }
 });
 wrap.addEventListener("pointerdown", (event) => {
   if (completed) return;
   wrap.setPointerCapture(event.pointerId); burning = true; lastPoint = null;
+  const point = canvasPoint(event);
+  const now = performance.now();
+  const repeated = now - ignitionCombo.time < 520 && Math.hypot(point.x - ignitionCombo.x, point.y - ignitionCombo.y) < 82;
+  ignitionCombo.count = repeated ? Math.min(ignitionCombo.count + 1, 6) : 1;
+  ignitionCombo.time = now; ignitionCombo.x = point.x; ignitionCombo.y = point.y;
+  const power = 1 + (ignitionCombo.count - 1) * .48;
+  igniteAt(point, power, true);
+  comboMessage = ignitionCombo.count > 1 ? `연속 ${ignitionCombo.count}번 점화 — 불길이 더 거세졌어요.` : "불이 붙었어요. 같은 곳을 연속 클릭하면 더 크게 타올라요.";
+  comboMessageUntil = now + 920;
+  $("#burn-status").textContent = comboMessage;
   $("#fire-cursor").classList.add("lit"); $("#stage-hint").style.opacity = 0;
   ensureAudio();
 });
@@ -364,8 +411,8 @@ function startDrawLoop() {
   requestAnimationFrame(drawFrame);
 }
 
-function organicPath(target, point, radius, detail = 38) {
-  target.beginPath();
+function organicPath(target, point, radius, detail = 16, append = false) {
+  if (!append) target.beginPath();
   for (let i = 0; i <= detail; i++) {
     const angle = (i / detail) * Math.PI * 2;
     const warp = 1 + Math.sin(angle * 3 + point.seed) * .15 + Math.sin(angle * 7 + point.seed * .37) * .08 + Math.sin(angle * 11 + point.seed * 1.7) * .035;
@@ -380,28 +427,29 @@ function organicPath(target, point, radius, detail = 38) {
 function drawBurnDamage() {
   ctx.save();
   ctx.globalCompositeOperation = "source-over";
-  ctx.filter = "blur(5px)";
+  ctx.beginPath();
   burnPoints.forEach((point) => {
-    organicPath(ctx, point, point.radius + 16);
-    ctx.fillStyle = "rgba(142,78,25,.22)";
-    ctx.fill();
+    organicPath(ctx, point, point.radius + 16, 10, true);
   });
-  ctx.filter = "none";
+  ctx.fillStyle = "rgba(142,78,25,.22)";
+  ctx.fill();
+  ctx.beginPath();
   burnPoints.forEach((point) => {
-    organicPath(ctx, point, point.radius + 7);
-    ctx.fillStyle = "rgba(61,32,15,.82)";
-    ctx.fill();
+    organicPath(ctx, point, point.radius + 7, 10, true);
   });
+  ctx.fillStyle = "rgba(61,32,15,.82)";
+  ctx.fill();
+  ctx.beginPath();
   burnPoints.forEach((point) => {
-    organicPath(ctx, point, point.radius);
-    ctx.fillStyle = "rgba(15,12,9,.97)";
-    ctx.fill();
+    organicPath(ctx, point, point.radius, 10, true);
   });
+  ctx.fillStyle = "rgba(15,12,9,.97)";
+  ctx.fill();
 
   ctx.globalAlpha = .42;
   ctx.fillStyle = "#050403";
   burnPoints.forEach((point) => {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 1; i++) {
       const angle = point.seed + i * 2.399;
       const distance = point.radius * (.72 + (i % 2) * .18);
       const size = 1 + ((point.seed + i * 7) % 3.5);
@@ -415,11 +463,12 @@ function drawBurnDamage() {
   ctx.save();
   ctx.globalCompositeOperation = "destination-out";
   ctx.fillStyle = "#000";
+  ctx.beginPath();
   burnPoints.forEach((point) => {
     if (point.radius <= 13) return;
-    organicPath(ctx, point, point.radius - 9);
-    ctx.fill();
+    organicPath(ctx, point, point.radius - 9, 10, true);
   });
+  ctx.fill();
   ctx.restore();
 }
 
@@ -434,90 +483,90 @@ function flamePath(target, x, y, width, height, lean, flicker) {
 
 function drawLivingFire(point, index, time) {
   if (point.radius < 14 || point.life > 132 || index % 2) return;
+  const power = Math.min(point.power || 1, 3.4);
   const angle = -Math.PI / 2 + Math.sin(point.seed) * .92;
   const edgeX = point.x + Math.cos(angle) * point.radius * .82;
   const edgeY = point.y + Math.sin(angle) * point.radius * .72;
   const flicker = Math.sin(time * .012 + point.phase) * 8;
-  const height = 46 + (point.seed % 45) + Math.sin(time * .019 + point.seed) * 15;
-  const width = 18 + (point.seed % 16);
+  const height = (46 + (point.seed % 45) + Math.sin(time * .019 + point.seed) * 15) * (1 + (power - 1) * .2);
+  const width = (18 + (point.seed % 16)) * (1 + (power - 1) * .14);
   const lean = Math.sin(time * .007 + point.seed) * 16;
 
   fctx.save();
-  fctx.globalCompositeOperation = "lighter";
-  fctx.shadowColor = "rgba(255,82,0,.8)";
-  fctx.shadowBlur = 30;
+  fctx.globalCompositeOperation = "source-over";
+  fctx.shadowBlur = 0;
   flamePath(fctx, edgeX, edgeY, width, height, lean, flicker);
-  const flame = fctx.createLinearGradient(edgeX, edgeY, edgeX, edgeY - height);
-  flame.addColorStop(0, "rgba(190,24,0,.9)");
-  flame.addColorStop(.3, "rgba(255,76,0,.98)");
-  flame.addColorStop(.72, "rgba(255,170,25,.94)");
-  flame.addColorStop(1, "rgba(255,222,104,.08)");
-  fctx.fillStyle = flame;
+  fctx.fillStyle = "#e92b12";
   fctx.fill();
 
-  flamePath(fctx, edgeX + lean * .18, edgeY, width * .38, height * .62, lean * .35, flicker * .2);
-  const core = fctx.createLinearGradient(edgeX, edgeY, edgeX, edgeY - height * .62);
-  core.addColorStop(0, "rgba(255,245,190,.96)");
-  core.addColorStop(.55, "rgba(255,183,45,.82)");
-  core.addColorStop(1, "rgba(255,130,0,0)");
-  fctx.fillStyle = core;
+  flamePath(fctx, edgeX + lean * .12, edgeY + 1, width * .72, height * .77, lean * .42, flicker * .18);
+  fctx.fillStyle = "#ff7900";
+  fctx.fill();
+
+  flamePath(fctx, edgeX + lean * .14, edgeY + 2, width * .37, height * .53, lean * .24, flicker * .08);
+  fctx.fillStyle = "#ffd32a";
   fctx.fill();
 
   if (index % 4 === 0) {
     const sideX = edgeX + Math.sin(point.seed) * 26;
     const sideHeight = height * (.58 + Math.sin(time * .013 + point.seed) * .12);
     flamePath(fctx, sideX, edgeY + 4, width * .66, sideHeight, -lean * .45, -flicker * .35);
-    const side = fctx.createLinearGradient(sideX, edgeY, sideX, edgeY - sideHeight);
-    side.addColorStop(0, "rgba(205,35,0,.92)");
-    side.addColorStop(.46, "rgba(255,111,0,.95)");
-    side.addColorStop(1, "rgba(255,196,52,0)");
-    fctx.fillStyle = side;
+    fctx.fillStyle = "#ff5b00";
     fctx.fill();
   }
   fctx.restore();
 }
 
 function updateCoverage() {
+  if (++coverageTick % 10 !== 0) return;
+  coverageCtx.setTransform(1, 0, 0, 1, 0, 0);
+  coverageCtx.clearRect(0, 0, coverage.width, coverage.height);
   coverageCtx.save();
   coverageCtx.setTransform(.2, 0, 0, .2, 0, 0);
   coverageCtx.fillStyle = "#fff";
+  coverageCtx.beginPath();
   burnPoints.forEach((point) => {
     if (point.radius <= 12) return;
-    organicPath(coverageCtx, point, point.radius - 9);
-    coverageCtx.fill();
+    organicPath(coverageCtx, point, point.radius - 9, 8, true);
   });
+  coverageCtx.fill();
   coverageCtx.restore();
-  if (++coverageTick % 12 !== 0) return;
   const pixels = coverageCtx.getImageData(0, 0, coverage.width, coverage.height).data;
   let covered = 0;
   for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 20) covered++;
   burnPercent = Math.min(100, Math.round(covered / (coverage.width * coverage.height) * 100));
 }
 
-function drawFrame() {
+function drawFrame(time) {
+  if (time - lastFrameAt < 22) { requestAnimationFrame(drawFrame); return; }
+  lastFrameAt = time;
   ctx.clearRect(0, 0, 900, 620);
   ctx.drawImage(original, 0, 0);
   drawBurnDamage();
   fctx.clearRect(0, 0, 900, 620);
-  const time = performance.now();
-  burnPoints.forEach((point, index) => {
+  burnPoints.forEach((point) => {
     point.life += burning ? .82 : .24;
     point.radius = Math.min(point.maxRadius, point.radius + (burning ? .58 : .22));
-    if (point.radius > 16 && point.life < 138 && Math.random() > .7) particles.push({ x: point.x + (Math.random() - .5) * point.radius * 1.6, y: point.y - point.radius * .2, vx: (Math.random() - .5) * 2.5, vy: -Math.random() * 4.2 - .6, life: 38 + Math.random() * 62, ember: Math.random() > .32 });
-    drawLivingFire(point, index, time);
+    if (point.radius > 16 && point.life < 108 && (burning || (point.power || 1) > 1.2) && Math.random() > .9) addParticle(point.x, point.y - point.radius * .2, Math.min(point.power || 1, 2.4));
   });
+  const livePoints = burnPoints.filter((point) => point.radius >= 14 && point.life <= 132);
+  const flameStride = Math.max(1, Math.ceil(livePoints.length / 22));
+  livePoints.forEach((point, index) => {
+    if (index % flameStride === 0 || (point.power || 1) > 1.7) drawLivingFire(point, index, time);
+  });
+  if (particles.length > 160) particles.splice(0, particles.length - 160);
   particles = particles.filter((p) => p.life > 0);
   particles.forEach((p) => {
     p.x += p.vx; p.y += p.vy; p.vx *= .992; p.vy -= .018; p.life--;
     fctx.globalAlpha = Math.min(1, p.life / 20);
     fctx.fillStyle = p.ember && p.life > 17 ? (p.life % 3 > 1 ? "#ffb000" : "#ff4d00") : "#221a15";
-    fctx.shadowColor = p.ember ? "#ff6a00" : "transparent"; fctx.shadowBlur = p.ember ? 8 : 0;
+    fctx.shadowBlur = 0;
     fctx.beginPath(); fctx.ellipse(p.x, p.y, p.ember ? 2.2 : 2.7, p.ember ? 4.1 : 1.5, p.vx, 0, Math.PI * 2); fctx.fill();
   });
   fctx.globalAlpha = 1;
   updateCoverage();
   $("#burn-percent").textContent = `${burnPercent}% BURNED`;
-  $("#burn-status").textContent = burnPercent ? (burnPercent < 75 ? "종이가 검게 그을리며 타들어가고 있어요." : "거의 다 놓아주었어요.") : "아직 아무것도 타지 않았어요.";
+  if (time > comboMessageUntil) $("#burn-status").textContent = burnPercent ? (burnPercent < 75 ? "종이가 검게 그을리며 타들어가고 있어요." : "거의 다 놓아주었어요.") : "아직 아무것도 타지 않았어요.";
   if (burnPercent >= 96 && !completed) finishBurn();
   requestAnimationFrame(drawFrame);
 }
@@ -532,7 +581,7 @@ function finishBurn() {
 }
 
 function resetBurn(show = true) {
-  burnPoints = []; particles = []; burnPercent = 0; coverageTick = 0; completed = false; burning = false; lastPoint = null;
+  burnPoints = []; particles = []; burnPercent = 0; coverageTick = 0; completed = false; burning = false; lastPoint = null; ignitionCombo = { count: 0, time: 0, x: 0, y: 0 }; comboMessage = ""; comboMessageUntil = 0;
   coverageCtx.setTransform(1, 0, 0, 1, 0, 0);
   coverageCtx.clearRect(0, 0, coverage.width, coverage.height);
   $("#stage-hint").style.opacity = 1;
