@@ -3,6 +3,6 @@
   "slug": "burnit",
   "title": "BurnIT",
   "static": {
-    "directory": "."
+    "directory": "dist"
   }
 }
