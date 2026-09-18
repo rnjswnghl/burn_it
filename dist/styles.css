@@ -118,16 +118,17 @@ h1 em { display: block; line-height: 1.1; padding-bottom: .08em; font-weight: 40
 .burn-stage { min-width: 0; padding: 28px 0 28px 32px; }
 .stage-meta, .stage-controls { display: flex; justify-content: space-between; align-items: center; gap: 20px; font: 10px Arial, sans-serif; letter-spacing: .12em; }
 .stage-meta { margin-bottom: 12px; }
-.canvas-wrap { width: 100%; aspect-ratio: 1.45; max-height: 620px; position: relative; overflow: hidden; border: 1px solid var(--ink); background: #fff; cursor: none; touch-action: none; user-select: none; -webkit-user-select: none; box-shadow: none; }
+.canvas-wrap { width: 100%; aspect-ratio: 1.45; max-height: 620px; position: relative; overflow: hidden; border: 1px solid var(--ink); background: #fff; cursor: crosshair; touch-action: none; user-select: none; -webkit-user-select: none; box-shadow: none; }
+.canvas-wrap.targeting { cursor: pointer; }
 #burn-canvas, #fx-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 #fx-canvas { pointer-events: none; }
 .stage-hint { position: absolute; z-index: 3; left: 50%; bottom: 18px; transform: translateX(-50%); margin: 0; padding: 7px 10px; color: var(--paper); background: var(--ink); font-size: 10px; white-space: nowrap; transition: opacity .25s; }
-.fire-cursor { position: absolute; z-index: 4; width: 46px; height: 64px; pointer-events: none; opacity: 0; transform-origin: 50% 100%; border-radius: 80% 18% 68% 38% / 80% 40% 62% 22%; background: #e92b12; transform: rotate(7deg); animation: cursor-fire .18s ease-in-out infinite alternate; }
-.fire-cursor::before { content: ""; position: absolute; width: 29px; height: 44px; left: 7px; top: 17px; border-radius: 75% 25% 68% 30% / 80% 44% 58% 20%; background: #ffd32a; transform: rotate(-9deg); }
-.fire-cursor i, .fire-cursor b { position: absolute; display: block; border-radius: 75% 24% 70% 30% / 80% 46% 56% 22%; background: #ff7900; }
-.fire-cursor i { width: 21px; height: 42px; left: -11px; bottom: 2px; transform: rotate(-25deg); }
-.fire-cursor b { width: 18px; height: 35px; right: -9px; bottom: 4px; transform: rotate(28deg); }
-.fire-cursor.lit { filter: saturate(1.25); transform: scale(1.13) rotate(-5deg); }
+.stage-clear { position: absolute; z-index: 6; left: 50%; top: 50%; width: min(430px, calc(100% - 40px)); transform: translate(-50%, -50%) rotate(-1deg); border: 3px solid var(--ink); background: rgba(255,255,255,.92); padding: 28px 30px 26px; text-align: left; box-shadow: 12px 14px 0 rgba(23,23,21,.16); animation: clear-stamp .42s cubic-bezier(.2,.8,.2,1) both; }
+.stage-clear p { margin: 0 0 8px; font: 10px Arial, sans-serif; letter-spacing: .18em; color: var(--fire); }
+.stage-clear h3 { margin: 0 0 10px; font: italic clamp(38px, 5vw, 64px)/.95 Georgia, serif; font-weight: 400; letter-spacing: -.05em; }
+.stage-clear span { display: block; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.stage-clear button { margin-top: 22px; border: 0; border-bottom: 1px solid var(--ink); background: transparent; padding: 8px 0; font-size: 13px; }
+.stage-clear button:hover, .stage-clear button:focus-visible { color: var(--fire); border-color: var(--fire); outline: none; }
 .stage-controls { margin-top: 12px; letter-spacing: 0; color: var(--muted); }
 .stage-controls p { margin: 0; }
 .text-button { border: 0; background: transparent; padding: 7px 0 7px 12px; border-bottom: 1px solid var(--ink); }
@@ -146,7 +147,7 @@ footer { min-height: 52px; border-top: 1px solid var(--ink); display: flex; just
 @keyframes reveal { from { opacity: 0; transform: translateY(12px); } }
 @keyframes dice-roll { 25% { transform: rotate(90deg) scale(1.2); } 50% { transform: rotate(180deg); } 75% { transform: rotate(270deg) scale(.85); } 100% { transform: rotate(360deg); } }
 @keyframes flame { from { transform: skewX(-5deg) scaleY(.9); } to { transform: skewX(7deg) scaleY(1.08); } }
-@keyframes cursor-fire { from { scale: .94 1; rotate: -3deg; } to { scale: 1.05 .92; rotate: 4deg; } }
+@keyframes clear-stamp { from { opacity: 0; transform: translate(-50%, -44%) rotate(4deg) scale(1.12); } to { opacity: 1; transform: translate(-50%, -50%) rotate(-1deg) scale(1); } }
 @keyframes reel-spin { 0% { transform: translateY(-13%); } 50% { transform: translateY(14%); } 100% { transform: translateY(-13%); } }
 @keyframes lever-pull { 0%, 100% { transform: rotate(0); } 45% { transform: rotate(28deg); } }
 

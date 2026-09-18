@@ -30,6 +30,12 @@ let lastFrameAt = 0;
 let ignitionCombo = { count: 0, time: 0, x: 0, y: 0 };
 let comboMessage = "";
 let comboMessageUntil = 0;
+let ignitionPoints = [];
+let hoveredIgnition = -1;
+let infernoActive = false;
+let infernoStarted = 0;
+let lastInfernoBurst = 0;
+let infernoBounds = { x: 140, y: 120, width: 620, height: 410 };
 
 const canvas = $("#burn-canvas");
 const fx = $("#fx-canvas");
@@ -215,75 +221,83 @@ function hatch(x, y, width, height, spacing = 10, lineWidth = 1) {
   octx.restore();
 }
 
+function drawPlayer(x, groundY) {
+  octx.save();
+  octx.beginPath(); octx.arc(x, groundY - 58, 10, 0, Math.PI * 2); octx.fillStyle = "#171715"; octx.fill();
+  inkLine([[x, groundY - 47], [x, groundY - 18]], 5, 1.5, 2);
+  inkLine([[x, groundY - 39], [x - 18, groundY - 22]], 4, 1.5, 2);
+  inkLine([[x, groundY - 38], [x + 22, groundY - 29]], 4, 1.5, 2);
+  inkLine([[x, groundY - 18], [x - 17, groundY]], 5, 1.5, 2);
+  inkLine([[x, groundY - 18], [x + 20, groundY]], 5, 1.5, 2);
+  octx.font = "bold 10px Arial"; octx.textAlign = "center"; octx.fillText("YOU", x, groundY + 18);
+  octx.restore();
+}
+
 function officeScene() {
-  inkLine([[-410, 205], [410, 205]], 5, 2.4, 3);
-  inkLine([[-410, -245], [410, -245]], 2, 1.5, 2, .55);
-  inkRect(-375, -205, 250, 180, 4, 2.4);
-  inkLine([[-250, -205], [-250, -25], [-375, -25], [-125, -25]], 2, 1.2, 2);
-  for (let x = -350; x < -130; x += 42) inkLine([[x, -195], [x, -38]], 1, 1.8, 1, .42);
-  hatch(-370, -200, 240, 170, 17, .8);
-  octx.font = "italic 22px Georgia"; octx.fillStyle = "#171715"; octx.textAlign = "left"; octx.fillText("still here · 21:47", -370, -218);
-  [-270, 45, 300].forEach((x, index) => {
-    const deskY = 92 + (index % 2) * 18;
-    inkLine([[x - 120, deskY], [x + 90, deskY]], 7, 3.2, 3);
-    inkLine([[x - 105, deskY], [x - 112, 196]], 3, 2, 2);
-    inkLine([[x + 74, deskY], [x + 83, 196]], 3, 2, 2);
-    inkRect(x - 55, deskY - 100, 105, 70, index === 1 ? 5 : 3, 2.6);
-    hatch(x - 50, deskY - 95, 95, 60, 13 + index * 3, .9);
-    inkLine([[x - 5, deskY - 30], [x - 5, deskY], [x - 34, deskY]], 3, 2, 2);
-    inkLine([[x + 70, deskY - 18], [x + 89, deskY - 44]], 2, 1.5, 2);
-  });
-  inkLine([[-70, -226], [-45, -183], [-10, -226], [25, -183], [62, -226]], 2, 2.2, 2);
-  octx.font = "italic 54px Georgia"; octx.textAlign = "center"; octx.fillText("OVERTIME", 128, -135);
-  $("#stage-label").textContent = "SUBJECT 01 · OVERTIME OFFICE";
+  inkLine([[-420, 225], [420, 225]], 5, 2.2, 3);
+  inkRect(-320, -225, 640, 445, 5, 2.7);
+  inkLine([[-320, -160], [320, -160]], 3, 2, 2);
+  octx.font = "italic 31px Georgia"; octx.fillStyle = "#171715"; octx.textAlign = "center"; octx.fillText("OVERTIME OFFICE · 21:47", 0, -181);
+  for (let row = 0; row < 3; row++) {
+    for (let column = 0; column < 6; column++) {
+      const x = -280 + column * 101;
+      const y = -125 + row * 102;
+      inkRect(x, y, 67, 60, (row + column) % 4 === 0 ? 3 : 1.4, 2);
+      if ((row + column) % 3 === 0) hatch(x + 5, y + 5, 57, 50, 14, .7);
+    }
+  }
+  inkRect(-62, 122, 124, 98, 5, 2.4);
+  inkLine([[0, 122], [0, 220]], 2, 1.4, 2);
+  inkLine([[-365, -222], [-320, -260], [-270, -222]], 2, 2, 2);
+  drawPlayer(-380, 220);
+  setIgnitionPoints([[205, 480], [350, 365], [548, 462], [705, 324]], { x: 130, y: 80, width: 640, height: 450 });
+  $("#stage-label").textContent = "STAGE 01 · OVERTIME OFFICE";
 }
 
 function meetingScene() {
-  octx.font = "italic 30px Georgia"; octx.fillStyle = "#171715"; octx.textAlign = "center"; octx.fillText("MEETING #07 · no conclusion", 0, -220);
-  inkLine([[-360, 95], [-250, -85], [255, -85], [370, 95], [250, 190], [-250, 190], [-360, 95]], 6, 3.5, 3);
-  hatch(-270, -62, 540, 225, 19, 1.1);
-  [[-285,-130],[-95,-145],[100,-145],[290,-125],[-330,20],[330,20]].forEach(([x,y], index) => {
-    octx.beginPath(); octx.arc(x, y, 24 + index % 2 * 3, 0, Math.PI * 2); octx.strokeStyle = "#171715"; octx.lineWidth = index % 3 === 0 ? 5 : 2; octx.stroke();
-    inkLine([[x - 28, y + 64], [x, y + 27], [x + 30, y + 64]], 3 + index % 2, 3, 2);
-  });
-  inkRect(-87, -45, 174, 102, 3, 2.6);
-  octx.font = "italic 24px Georgia"; octx.fillText("another slide", 0, 5);
-  inkLine([[-180,-192],[-150,-218],[-120,-190]], 2, 2, 2);
-  inkLine([[185,-193],[215,-220],[245,-190]], 2, 2, 2);
-  for (let i = 0; i < 42; i++) {
-    octx.fillStyle = `rgba(23,23,21,${.2 + Math.random() * .5})`;
-    octx.fillRect(-390 + Math.random() * 780, 220 + Math.random() * 18, 1 + Math.random() * 5, 1 + Math.random() * 2);
+  inkLine([[-420, 225], [420, 225]], 5, 2.2, 3);
+  inkRect(-355, -105, 710, 325, 4, 2.5);
+  inkLine([[-385, -105], [0, -248], [385, -105]], 5, 3, 3);
+  inkRect(-75, -224, 150, 119, 3, 2);
+  octx.beginPath(); octx.arc(0, -168, 32, 0, Math.PI * 2); octx.strokeStyle = "#171715"; octx.lineWidth = 3; octx.stroke();
+  inkLine([[0, -168], [0, -190], [17, -168]], 2, 1.5, 2);
+  for (let column = 0; column < 7; column++) {
+    const x = -320 + column * 104;
+    inkRect(x, -62, 70, 64, column % 3 === 0 ? 3 : 1.2, 2);
+    inkRect(x, 45, 70, 64, column % 2 === 0 ? 2.6 : 1.2, 2);
   }
-  $("#stage-label").textContent = "SUBJECT 02 · ENDLESS MEETING";
+  inkRect(-58, 118, 116, 102, 5, 2.5);
+  octx.font = "italic 29px Georgia"; octx.fillStyle = "#171715"; octx.textAlign = "center"; octx.fillText("SCHOOL MAIN HALL", 0, 196);
+  drawPlayer(-400, 220);
+  setIgnitionPoints([[165, 445], [315, 365], [452, 492], [620, 367], [755, 452]], { x: 90, y: 62, width: 720, height: 475 });
+  $("#stage-label").textContent = "STAGE 02 · SCHOOL MAIN HALL";
 }
 
 function workloadScene() {
-  inkLine([[-415, 210], [415, 210]], 7, 4, 3);
-  const piles = [
-    { x: -335, y: 155, count: 5, width: 245 },
-    { x: -110, y: 150, count: 8, width: 260 },
-    { x: 150, y: 160, count: 6, width: 220 },
-  ];
-  piles.forEach((pile, pileIndex) => {
-    for (let i = 0; i < pile.count; i++) {
-      const y = pile.y - i * 42;
-      const skew = (i % 3 - 1) * 7;
-      inkRect(pile.x + skew, y, pile.width - i % 2 * 18, 35, i % 3 === 0 ? 5 : 2, 2.8);
-      if (i % 2) hatch(pile.x + skew + 8, y + 6, pile.width - 30, 23, 16, .8);
-      inkLine([[pile.x + skew + 20, y + 13], [pile.x + skew + pile.width * .68, y + 13]], i % 3 === 0 ? 2.5 : 1, 2, 2);
-    }
-    if (pileIndex === 1) {
-      octx.font = "italic 31px Georgia"; octx.fillStyle = "#171715"; octx.textAlign = "center"; octx.fillText("URGENT", pile.x + pile.width / 2, pile.y - pile.count * 42 - 12);
-    }
-  });
-  octx.font = "italic 29px Georgia"; octx.textAlign = "left"; octx.fillText("today's workload", -400, -225);
-  inkLine([[-398,-210],[-160,-210]], 2, 1.5, 2);
-  for (let i = 0; i < 55; i++) {
-    const x = -410 + Math.random() * 820; const y = -195 + Math.random() * 380;
-    octx.fillStyle = `rgba(23,23,21,${.18 + Math.random() * .42})`;
-    octx.beginPath(); octx.arc(x, y, .5 + Math.random() * 1.6, 0, Math.PI * 2); octx.fill();
-  }
-  $("#stage-label").textContent = "SUBJECT 03 · THE WORKLOAD";
+  inkLine([[-420, 225], [420, 225]], 6, 3, 3);
+  inkRect(-345, -125, 590, 345, 5, 3);
+  inkLine([[245, -125], [360, -38], [360, 220], [245, 220]], 4, 2.5, 3);
+  inkRect(-300, -78, 130, 92, 2, 2);
+  inkRect(-120, -78, 130, 92, 4, 2.6);
+  inkRect(60, -78, 130, 92, 2, 2);
+  inkRect(-300, 58, 130, 92, 4, 2.6);
+  inkRect(-120, 58, 130, 92, 2, 2);
+  inkRect(60, 58, 130, 92, 4, 2.6);
+  hatch(-292, -70, 114, 76, 13, .8);
+  hatch(-112, 66, 114, 76, 13, .8);
+  inkLine([[-310, -126], [-310, -248], [-250, -248], [-250, -126]], 7, 3, 3);
+  inkLine([[-280, -248], [-280, -286]], 4, 2, 2);
+  inkLine([[275, -34], [330, -34], [330, 10], [275, 10]], 2, 1.6, 2);
+  octx.font = "italic 31px Georgia"; octx.fillStyle = "#171715"; octx.textAlign = "center"; octx.fillText("CORPORATE LAB · BLOCK C", -48, 198);
+  drawPlayer(-398, 220);
+  setIgnitionPoints([[150, 440], [294, 322], [432, 470], [570, 325], [695, 440], [775, 270]], { x: 92, y: 48, width: 720, height: 490 });
+  $("#stage-label").textContent = "STAGE 03 · CORPORATE LAB";
+}
+
+function setIgnitionPoints(points, bounds) {
+  ignitionPoints = points.map(([x, y], index) => ({ x, y, index, lit: false }));
+  infernoBounds = bounds;
+  updateIgnitionProgress();
 }
 
 function renderPreset(name) {
@@ -305,6 +319,7 @@ function renderUploadPlaceholder() {
   octx.font = "italic 34px Georgia"; octx.fillStyle = "#55534d"; octx.textAlign = "center"; octx.fillText("your image, your ritual", 450, 290);
   octx.font = "16px Segoe Print"; octx.fillText("왼쪽에서 이미지를 골라주세요", 450, 335);
   $("#stage-label").textContent = "SUBJECT · YOUR IMAGE";
+  setIgnitionPoints([[250, 230], [650, 230], [320, 435], [580, 435]], { x: 170, y: 110, width: 560, height: 400 });
   startDrawLoop();
 }
 
@@ -327,6 +342,12 @@ function loadFile(file) {
       octx.drawImage(image, (900 - width) / 2, (620 - height) / 2, width, height);
       octx.strokeStyle = "#171715"; octx.lineWidth = 4; octx.strokeRect((900 - width) / 2, (620 - height) / 2, width, height);
       $("#stage-label").textContent = `SUBJECT · ${file.name.slice(0, 24).toUpperCase()}`;
+      setIgnitionPoints([
+        [(900 - width) / 2 + width * .22, (620 - height) / 2 + height * .28],
+        [(900 - width) / 2 + width * .76, (620 - height) / 2 + height * .28],
+        [(900 - width) / 2 + width * .32, (620 - height) / 2 + height * .72],
+        [(900 - width) / 2 + width * .68, (620 - height) / 2 + height * .72],
+      ], { x: (900 - width) / 2, y: (620 - height) / 2, width, height });
       startDrawLoop(); showToast("준비됐어요. 불꽃으로 활활 태워보세요.");
     };
     image.src = reader.result;
@@ -374,36 +395,50 @@ function igniteAt(point, power = 1, burst = false) {
 }
 
 const wrap = $("#canvas-wrap");
-wrap.addEventListener("pointerenter", () => $("#fire-cursor").style.opacity = 1);
-wrap.addEventListener("pointerleave", () => { $("#fire-cursor").style.opacity = 0; burning = false; lastPoint = null; });
 wrap.addEventListener("pointermove", (event) => {
-  const rect = wrap.getBoundingClientRect();
-  const cursor = $("#fire-cursor");
-  cursor.style.left = `${event.clientX - rect.left - 21}px`; cursor.style.top = `${event.clientY - rect.top - 40}px`;
-  if (!burning || completed) return;
   const point = canvasPoint(event);
-  if (!lastPoint || Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y) > 14) {
-    igniteAt(point, 1, false);
-    lastPoint = point;
-  }
+  hoveredIgnition = ignitionPoints.findIndex((target) => !target.lit && Math.hypot(point.x - target.x, point.y - target.y) < 48);
+  wrap.classList.toggle("targeting", hoveredIgnition >= 0);
 });
 wrap.addEventListener("pointerdown", (event) => {
   if (completed) return;
-  wrap.setPointerCapture(event.pointerId); burning = true; lastPoint = null;
   const point = canvasPoint(event);
-  const now = performance.now();
-  const repeated = now - ignitionCombo.time < 520 && Math.hypot(point.x - ignitionCombo.x, point.y - ignitionCombo.y) < 82;
-  ignitionCombo.count = repeated ? Math.min(ignitionCombo.count + 1, 6) : 1;
-  ignitionCombo.time = now; ignitionCombo.x = point.x; ignitionCombo.y = point.y;
-  const power = 1 + (ignitionCombo.count - 1) * .48;
-  igniteAt(point, power, true);
-  comboMessage = ignitionCombo.count > 1 ? `연속 ${ignitionCombo.count}번 점화 — 불길이 더 거세졌어요.` : "불이 붙었어요. 같은 곳을 연속 클릭하면 더 크게 타올라요.";
-  comboMessageUntil = now + 920;
-  $("#burn-status").textContent = comboMessage;
-  $("#fire-cursor").classList.add("lit"); $("#stage-hint").style.opacity = 0;
-  ensureAudio();
+  const index = ignitionPoints.findIndex((target) => !target.lit && Math.hypot(point.x - target.x, point.y - target.y) < 54);
+  if (index < 0) {
+    $("#burn-status").textContent = "주황색 원으로 표시된 점화 포인트를 클릭하세요.";
+    return;
+  }
+  igniteTarget(index);
 });
-wrap.addEventListener("pointerup", (event) => { burning = false; lastPoint = null; $("#fire-cursor").classList.remove("lit"); if (wrap.hasPointerCapture(event.pointerId)) wrap.releasePointerCapture(event.pointerId); });
+wrap.addEventListener("pointerleave", () => { hoveredIgnition = -1; wrap.classList.remove("targeting"); });
+
+function igniteTarget(index) {
+  const target = ignitionPoints[index];
+  if (!target || target.lit || completed) return;
+  target.lit = true;
+  burning = true;
+  igniteAt(target, 2.35, true);
+  setTimeout(() => { if (!infernoActive) burning = false; }, 260);
+  ensureAudio();
+  updateIgnitionProgress();
+  if (ignitionPoints.every((point) => point.lit)) startInferno();
+}
+
+function updateIgnitionProgress() {
+  const lit = ignitionPoints.filter((point) => point.lit).length;
+  $("#burn-percent").textContent = `${lit} / ${ignitionPoints.length || 0} LIT`;
+  if (!infernoActive && !completed) $("#burn-status").textContent = lit ? `${lit}곳 점화 완료. 남은 포인트를 찾으세요.` : "아직 불이 붙지 않았어요. 주황색 포인트를 찾으세요.";
+}
+
+function startInferno() {
+  infernoActive = true;
+  burning = true;
+  infernoStarted = performance.now();
+  lastInfernoBurst = 0;
+  $("#stage-hint").textContent = "모든 지점 점화 완료 · 건물이 타오릅니다";
+  $("#stage-hint").style.opacity = 1;
+  $("#burn-status").textContent = "모든 지점에 불이 붙었습니다. 잠시 불멍하세요.";
+}
 
 function startDrawLoop() {
   if (renderLoopStarted) return;
@@ -517,6 +552,45 @@ function drawLivingFire(point, index, time) {
   fctx.restore();
 }
 
+function drawIgnitionMarkers(time) {
+  if (completed || (infernoActive && time - infernoStarted > 650)) return;
+  ignitionPoints.forEach((point, index) => {
+    fctx.save();
+    const hovered = index === hoveredIgnition;
+    const pulse = 1 + Math.sin(time * .006 + index) * .09;
+    fctx.translate(point.x, point.y);
+    fctx.scale(hovered ? 1.18 : pulse, hovered ? 1.18 : pulse);
+    fctx.lineWidth = point.lit ? 3 : 2.5;
+    fctx.strokeStyle = point.lit ? "#171715" : "#ff5b00";
+    fctx.fillStyle = point.lit ? "#ff7900" : "rgba(255,255,255,.92)";
+    fctx.beginPath(); fctx.arc(0, 0, 17, 0, Math.PI * 2); fctx.fill(); fctx.stroke();
+    if (point.lit) {
+      fctx.fillStyle = "#171715";
+      fctx.font = "bold 17px Arial"; fctx.textAlign = "center"; fctx.textBaseline = "middle"; fctx.fillText("✓", 0, 1);
+    } else {
+      fctx.strokeStyle = "#ff5b00"; fctx.lineWidth = 2;
+      fctx.beginPath(); fctx.moveTo(-25, 0); fctx.lineTo(-9, 0); fctx.moveTo(9, 0); fctx.lineTo(25, 0); fctx.moveTo(0, -25); fctx.lineTo(0, -9); fctx.moveTo(0, 9); fctx.lineTo(0, 25); fctx.stroke();
+      fctx.fillStyle = "#ff5b00"; fctx.font = "bold 11px Arial"; fctx.textAlign = "center"; fctx.textBaseline = "middle"; fctx.fillText(String(index + 1), 0, 1);
+    }
+    fctx.restore();
+  });
+}
+
+function updateInferno(time) {
+  if (!infernoActive) return;
+  const elapsed = time - infernoStarted;
+  if (elapsed < 2500 && time - lastInfernoBurst > 115) {
+    lastInfernoBurst = time;
+    for (let index = 0; index < 4; index++) {
+      const x = infernoBounds.x + Math.random() * infernoBounds.width;
+      const verticalBias = Math.pow(Math.random(), .7);
+      const y = infernoBounds.y + infernoBounds.height * (.25 + verticalBias * .72);
+      igniteAt({ x, y }, 1.65 + Math.random() * .55, false);
+    }
+  }
+  if (elapsed >= 3200 && !completed) finishBurn();
+}
+
 function updateCoverage() {
   if (++coverageTick % 10 !== 0) return;
   coverageCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -544,6 +618,7 @@ function drawFrame(time) {
   ctx.drawImage(original, 0, 0);
   drawBurnDamage();
   fctx.clearRect(0, 0, 900, 620);
+  updateInferno(time);
   burnPoints.forEach((point) => {
     point.life += burning ? .82 : .24;
     point.radius = Math.min(point.maxRadius, point.radius + (burning ? .58 : .22));
@@ -564,30 +639,43 @@ function drawFrame(time) {
     fctx.beginPath(); fctx.ellipse(p.x, p.y, p.ember ? 2.2 : 2.7, p.ember ? 4.1 : 1.5, p.vx, 0, Math.PI * 2); fctx.fill();
   });
   fctx.globalAlpha = 1;
+  drawIgnitionMarkers(time);
   updateCoverage();
-  $("#burn-percent").textContent = `${burnPercent}% BURNED`;
-  if (time > comboMessageUntil) $("#burn-status").textContent = burnPercent ? (burnPercent < 75 ? "종이가 검게 그을리며 타들어가고 있어요." : "거의 다 놓아주었어요.") : "아직 아무것도 타지 않았어요.";
-  if (burnPercent >= 96 && !completed) finishBurn();
   requestAnimationFrame(drawFrame);
 }
 
 function finishBurn() {
-  completed = true; burning = false; $("#fire-cursor").classList.remove("lit");
-  const subject = currentMode === "upload" ? "내 이미지" : { office: "야근 사무실", meeting: "끝없는 회의", workload: "쌓인 업무" }[currentPreset];
+  completed = true; burning = false; infernoActive = false;
+  const subject = currentMode === "upload" ? "내 이미지" : { office: "야근 오피스", meeting: "학교 본관", workload: "회사 연구동" }[currentPreset];
   history.unshift({ subject, date: new Date().toISOString(), by: user.nickname }); history = history.slice(0, 6);
   localStorage.setItem(historyKey, JSON.stringify(history)); renderHistory();
-  $("#burn-status").textContent = "다 탔어요. 이제 조금 가벼워졌기를.";
-  showToast("재만 남았습니다.");
+  $("#burn-status").textContent = "건물이 활활 타오릅니다. 스테이지 클리어.";
+  $("#stage-hint").style.opacity = 0;
+  $("#stage-clear").hidden = false;
+  showToast("모든 점화 포인트 완료. 스테이지 클리어.");
 }
 
 function resetBurn(show = true) {
-  burnPoints = []; particles = []; burnPercent = 0; coverageTick = 0; completed = false; burning = false; lastPoint = null; ignitionCombo = { count: 0, time: 0, x: 0, y: 0 }; comboMessage = ""; comboMessageUntil = 0;
+  burnPoints = []; particles = []; burnPercent = 0; coverageTick = 0; completed = false; burning = false; infernoActive = false; hoveredIgnition = -1; lastPoint = null; ignitionCombo = { count: 0, time: 0, x: 0, y: 0 }; comboMessage = ""; comboMessageUntil = 0;
+  ignitionPoints.forEach((point) => { point.lit = false; });
   coverageCtx.setTransform(1, 0, 0, 1, 0, 0);
   coverageCtx.clearRect(0, 0, coverage.width, coverage.height);
+  $("#stage-clear").hidden = true;
+  $("#stage-hint").textContent = "주황색 점화 포인트를 모두 찾아 클릭하세요";
   $("#stage-hint").style.opacity = 1;
-  if (show) showToast("새 종이를 꺼냈어요.");
+  updateIgnitionProgress();
+  if (show) showToast("점화 포인트를 다시 배치했습니다.");
 }
 $("#reset-button").addEventListener("click", () => resetBurn());
+
+$("#next-stage-button").addEventListener("click", () => {
+  const order = ["office", "meeting", "workload"];
+  const next = currentMode === "preset" ? order[(order.indexOf(currentPreset) + 1) % order.length] : "office";
+  if (currentMode !== "preset") switchMode("preset");
+  const button = $(`.preset[data-preset="${next}"]`);
+  if (button) button.click();
+  window.scrollTo({ top: $("#game-screen").offsetTop, behavior: "smooth" });
+});
 
 function renderHistory() {
   const list = $("#history-list");
