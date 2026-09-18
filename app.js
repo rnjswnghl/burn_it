@@ -18,6 +18,8 @@ let lastPoint = null;
 let audio = null;
 let muted = true;
 let renderLoopStarted = false;
+let burnPercent = 0;
+let coverageTick = 0;
 
 const canvas = $("#burn-canvas");
 const fx = $("#fx-canvas");
@@ -27,6 +29,10 @@ const original = document.createElement("canvas");
 original.width = canvas.width;
 original.height = canvas.height;
 const octx = original.getContext("2d");
+const coverage = document.createElement("canvas");
+coverage.width = 180;
+coverage.height = 124;
+const coverageCtx = coverage.getContext("2d", { willReadFrequently: true });
 
 function randomName() {
   let candidate;
@@ -195,8 +201,8 @@ wrap.addEventListener("pointermove", (event) => {
   if (!burning || completed) return;
   const point = canvasPoint(event);
   if (!lastPoint || Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y) > 6) {
-    burnPoints.push({ ...point, radius: 8, life: 0 });
-    for (let i = 0; i < 3; i++) particles.push({ x: point.x, y: point.y, vx: (Math.random() - .5) * 2, vy: -Math.random() * 3 - 1, life: 40 + Math.random() * 35 });
+    burnPoints.push({ ...point, radius: 6, maxRadius: 58 + Math.random() * 30, life: 0, seed: Math.random() * 900, phase: Math.random() * Math.PI * 2 });
+    for (let i = 0; i < 4; i++) particles.push({ x: point.x, y: point.y, vx: (Math.random() - .5) * 2.3, vy: -Math.random() * 3.3 - .8, life: 35 + Math.random() * 42, ember: Math.random() > .42 });
     lastPoint = point;
   }
 });
@@ -214,31 +220,148 @@ function startDrawLoop() {
   requestAnimationFrame(drawFrame);
 }
 
+function organicPath(target, point, radius, detail = 38) {
+  target.beginPath();
+  for (let i = 0; i <= detail; i++) {
+    const angle = (i / detail) * Math.PI * 2;
+    const warp = 1 + Math.sin(angle * 3 + point.seed) * .15 + Math.sin(angle * 7 + point.seed * .37) * .08 + Math.sin(angle * 11 + point.seed * 1.7) * .035;
+    const stretch = 1 + Math.sin(angle + point.phase) * .08;
+    const x = point.x + Math.cos(angle) * radius * warp;
+    const y = point.y + Math.sin(angle) * radius * warp * stretch;
+    if (i === 0) target.moveTo(x, y); else target.lineTo(x, y);
+  }
+  target.closePath();
+}
+
+function drawBurnDamage() {
+  ctx.save();
+  ctx.globalCompositeOperation = "source-over";
+  ctx.filter = "blur(5px)";
+  burnPoints.forEach((point) => {
+    organicPath(ctx, point, point.radius + 16);
+    ctx.fillStyle = "rgba(142,78,25,.22)";
+    ctx.fill();
+  });
+  ctx.filter = "none";
+  burnPoints.forEach((point) => {
+    organicPath(ctx, point, point.radius + 7);
+    ctx.fillStyle = "rgba(61,32,15,.82)";
+    ctx.fill();
+  });
+  burnPoints.forEach((point) => {
+    organicPath(ctx, point, point.radius);
+    ctx.fillStyle = "rgba(15,12,9,.97)";
+    ctx.fill();
+  });
+
+  ctx.globalAlpha = .42;
+  ctx.fillStyle = "#050403";
+  burnPoints.forEach((point) => {
+    for (let i = 0; i < 5; i++) {
+      const angle = point.seed + i * 2.399;
+      const distance = point.radius * (.72 + (i % 2) * .18);
+      const size = 1 + ((point.seed + i * 7) % 3.5);
+      ctx.beginPath();
+      ctx.ellipse(point.x + Math.cos(angle) * distance, point.y + Math.sin(angle) * distance, size * 1.9, size, angle, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.fillStyle = "#000";
+  burnPoints.forEach((point) => {
+    if (point.radius <= 13) return;
+    organicPath(ctx, point, point.radius - 9);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function flamePath(target, x, y, width, height, lean, flicker) {
+  target.beginPath();
+  target.moveTo(x - width * .52, y + 2);
+  target.bezierCurveTo(x - width * .82, y - height * .28, x - width * .18 + lean, y - height * .76, x + lean + flicker, y - height);
+  target.bezierCurveTo(x + width * .24 + lean, y - height * .63, x + width * .86, y - height * .24, x + width * .52, y + 2);
+  target.quadraticCurveTo(x, y - height * .12, x - width * .52, y + 2);
+  target.closePath();
+}
+
+function drawLivingFire(point, index, time) {
+  if (point.radius < 17 || point.life > 78 || index % 6) return;
+  const angle = -Math.PI / 2 + Math.sin(point.seed) * .92;
+  const edgeX = point.x + Math.cos(angle) * point.radius * .82;
+  const edgeY = point.y + Math.sin(angle) * point.radius * .72;
+  const flicker = Math.sin(time * .012 + point.phase) * 8;
+  const height = 27 + (point.seed % 31) + Math.sin(time * .019 + point.seed) * 9;
+  const width = 12 + (point.seed % 10);
+  const lean = Math.sin(time * .007 + point.seed) * 10;
+
+  fctx.save();
+  fctx.globalCompositeOperation = "lighter";
+  fctx.shadowColor = "rgba(255,82,0,.8)";
+  fctx.shadowBlur = 18;
+  flamePath(fctx, edgeX, edgeY, width, height, lean, flicker);
+  const flame = fctx.createLinearGradient(edgeX, edgeY, edgeX, edgeY - height);
+  flame.addColorStop(0, "rgba(190,24,0,.9)");
+  flame.addColorStop(.3, "rgba(255,76,0,.98)");
+  flame.addColorStop(.72, "rgba(255,170,25,.94)");
+  flame.addColorStop(1, "rgba(255,222,104,.08)");
+  fctx.fillStyle = flame;
+  fctx.fill();
+
+  flamePath(fctx, edgeX + lean * .18, edgeY, width * .38, height * .62, lean * .35, flicker * .2);
+  const core = fctx.createLinearGradient(edgeX, edgeY, edgeX, edgeY - height * .62);
+  core.addColorStop(0, "rgba(255,245,190,.96)");
+  core.addColorStop(.55, "rgba(255,183,45,.82)");
+  core.addColorStop(1, "rgba(255,130,0,0)");
+  fctx.fillStyle = core;
+  fctx.fill();
+  fctx.restore();
+}
+
+function updateCoverage() {
+  coverageCtx.save();
+  coverageCtx.setTransform(.2, 0, 0, .2, 0, 0);
+  coverageCtx.fillStyle = "#fff";
+  burnPoints.forEach((point) => {
+    if (point.radius <= 12) return;
+    organicPath(coverageCtx, point, point.radius - 9);
+    coverageCtx.fill();
+  });
+  coverageCtx.restore();
+  if (++coverageTick % 12 !== 0) return;
+  const pixels = coverageCtx.getImageData(0, 0, coverage.width, coverage.height).data;
+  let covered = 0;
+  for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 20) covered++;
+  burnPercent = Math.min(100, Math.round(covered / (coverage.width * coverage.height) * 100));
+}
+
 function drawFrame() {
   ctx.clearRect(0, 0, 900, 620);
   ctx.drawImage(original, 0, 0);
-  ctx.globalCompositeOperation = "destination-out";
-  burnPoints.forEach((point) => {
-    const gradient = ctx.createRadialGradient(point.x, point.y, Math.max(0, point.radius - 19), point.x, point.y, point.radius);
-    gradient.addColorStop(0, "rgba(0,0,0,1)"); gradient.addColorStop(.7, "rgba(0,0,0,.97)"); gradient.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = gradient; ctx.beginPath(); ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2); ctx.fill();
-  });
-  ctx.globalCompositeOperation = "source-over";
+  drawBurnDamage();
   fctx.clearRect(0, 0, 900, 620);
-  burnPoints.forEach((point) => {
-    point.life += burning ? 1 : .22;
-    point.radius = Math.min(76, point.radius + (burning ? .43 : .11));
-    if (point.radius > 18 && Math.random() > .93) particles.push({ x: point.x + (Math.random() - .5) * point.radius, y: point.y, vx: (Math.random() - .5) * 1.5, vy: -Math.random() * 2.2, life: 30 + Math.random() * 40 });
-    const ring = fctx.createRadialGradient(point.x, point.y, Math.max(0, point.radius - 8), point.x, point.y, point.radius + 6);
-    ring.addColorStop(0, "rgba(255,77,0,0)"); ring.addColorStop(.55, "rgba(255,62,0,.82)"); ring.addColorStop(.75, "rgba(255,176,0,.75)"); ring.addColorStop(1, "rgba(0,0,0,0)");
-    fctx.fillStyle = ring; fctx.beginPath(); fctx.arc(point.x, point.y, point.radius + 6, 0, Math.PI * 2); fctx.fill();
+  const time = performance.now();
+  burnPoints.forEach((point, index) => {
+    point.life += burning ? 1 : .34;
+    point.radius = Math.min(point.maxRadius, point.radius + (burning ? .48 : .17));
+    if (point.radius > 19 && point.life < 100 && Math.random() > .91) particles.push({ x: point.x + (Math.random() - .5) * point.radius * 1.4, y: point.y - point.radius * .25, vx: (Math.random() - .5) * 1.7, vy: -Math.random() * 2.5, life: 30 + Math.random() * 46, ember: Math.random() > .48 });
+    drawLivingFire(point, index, time);
   });
   particles = particles.filter((p) => p.life > 0);
-  particles.forEach((p) => { p.x += p.vx; p.y += p.vy; p.life--; fctx.fillStyle = p.life > 20 ? "#ff7a00" : "rgba(40,35,30,.5)"; fctx.fillRect(p.x, p.y, p.life > 20 ? 2.4 : 1.5, p.life > 20 ? 2.4 : 1.5); });
-  const percent = Math.min(100, Math.round(burnPoints.reduce((sum, p) => sum + p.radius * p.radius * Math.PI, 0) / (900 * 620) * 34));
-  $("#burn-percent").textContent = `${percent}% BURNED`;
-  $("#burn-status").textContent = percent ? (percent < 75 ? "잘 타고 있어요. 천천히 더 문질러보세요." : "거의 다 놓아주었어요.") : "아직 아무것도 타지 않았어요.";
-  if (percent >= 96 && !completed) finishBurn();
+  particles.forEach((p) => {
+    p.x += p.vx; p.y += p.vy; p.vx *= .992; p.vy -= .018; p.life--;
+    fctx.globalAlpha = Math.min(1, p.life / 20);
+    fctx.fillStyle = p.ember && p.life > 17 ? "#ff7a00" : "#221a15";
+    fctx.beginPath(); fctx.ellipse(p.x, p.y, p.ember ? 1.7 : 2.4, p.ember ? 2.6 : 1.2, p.vx, 0, Math.PI * 2); fctx.fill();
+  });
+  fctx.globalAlpha = 1;
+  updateCoverage();
+  $("#burn-percent").textContent = `${burnPercent}% BURNED`;
+  $("#burn-status").textContent = burnPercent ? (burnPercent < 75 ? "종이가 검게 그을리며 타들어가고 있어요." : "거의 다 놓아주었어요.") : "아직 아무것도 타지 않았어요.";
+  if (burnPercent >= 96 && !completed) finishBurn();
   requestAnimationFrame(drawFrame);
 }
 
@@ -252,7 +375,9 @@ function finishBurn() {
 }
 
 function resetBurn(show = true) {
-  burnPoints = []; particles = []; completed = false; burning = false; lastPoint = null;
+  burnPoints = []; particles = []; burnPercent = 0; coverageTick = 0; completed = false; burning = false; lastPoint = null;
+  coverageCtx.setTransform(1, 0, 0, 1, 0, 0);
+  coverageCtx.clearRect(0, 0, coverage.width, coverage.height);
   $("#stage-hint").style.opacity = 1;
   if (show) showToast("새 종이를 꺼냈어요.");
 }

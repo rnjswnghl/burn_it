@@ -88,7 +88,7 @@ h1 em { display: block; line-height: 1.1; padding-bottom: .08em; font-weight: 40
 .burn-stage { min-width: 0; padding: 28px 0 28px 32px; }
 .stage-meta, .stage-controls { display: flex; justify-content: space-between; align-items: center; gap: 20px; font: 10px Arial, sans-serif; letter-spacing: .12em; }
 .stage-meta { margin-bottom: 12px; }
-.canvas-wrap { width: 100%; aspect-ratio: 1.45; max-height: 620px; position: relative; overflow: hidden; border: 1px solid var(--ink); background: #dedbd1; cursor: none; touch-action: none; }
+.canvas-wrap { width: 100%; aspect-ratio: 1.45; max-height: 620px; position: relative; overflow: hidden; border: 1px solid var(--ink); background: radial-gradient(circle at 48% 44%, #29231e 0, #151310 56%, #0b0a09 100%); cursor: none; touch-action: none; user-select: none; -webkit-user-select: none; box-shadow: inset 0 0 70px rgba(0,0,0,.38); }
 #burn-canvas, #fx-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 #fx-canvas { pointer-events: none; }
 .stage-hint { position: absolute; z-index: 3; left: 50%; bottom: 18px; transform: translateX(-50%); margin: 0; padding: 7px 10px; color: var(--paper); background: var(--ink); font-size: 10px; white-space: nowrap; transition: opacity .25s; }
