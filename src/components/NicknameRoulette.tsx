@@ -172,25 +172,25 @@ export const NicknameRoulette: React.FC<NicknameRouletteProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-[#0c0a09] text-stone-200 overflow-y-auto select-none">
+    <div className="relative w-full h-full min-h-screen flex flex-col items-center justify-center p-2.5 sm:p-6 bg-[#0c0a09] text-stone-200 overflow-y-auto select-none">
       {/* Background ambient charcoal embers */}
       <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-900/30 via-stone-950/70 to-black" />
 
       {/* Main Parchment Slot Machine Frame */}
-      <div className="relative w-full max-w-2xl bg-[#1c1917] border-2 border-[#44403c] rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/80 flex flex-col items-center z-10 my-auto">
+      <div className="relative w-full max-w-2xl bg-[#1c1917] border-2 border-[#44403c] rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-2xl shadow-black/80 flex flex-col items-center z-10 my-auto">
         {/* Top Brass / Charcoal Header */}
-        <div className="flex items-center gap-2 mb-2">
-          <Flame className="w-6 h-6 text-amber-500 animate-pulse" />
-          <span className="text-xs font-serif tracking-[0.25em] text-amber-500/90 uppercase font-bold">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-2 w-full min-w-0">
+          <Flame className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 animate-pulse shrink-0" />
+          <span className="text-[10px] sm:text-xs font-serif tracking-[0.12em] sm:tracking-[0.25em] text-amber-500/90 uppercase font-bold whitespace-nowrap">
             Pencil & Charcoal Studio
           </span>
-          <Flame className="w-6 h-6 text-amber-500 animate-pulse" />
+          <Flame className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 animate-pulse shrink-0" />
         </div>
 
-        <h2 className="text-2xl sm:text-3xl font-serif font-black tracking-tight text-[#f5f5f4] text-center mb-1">
+        <h2 className="text-xl sm:text-3xl leading-tight font-serif font-black tracking-tight text-[#f5f5f4] text-center text-balance break-keep mb-1">
           소각자 닉네임 슬롯 룰렛
         </h2>
-        <p className="text-xs sm:text-sm text-stone-400 text-center font-serif mb-6 max-w-md">
+        <p className="text-xs sm:text-sm leading-relaxed text-stone-400 text-center text-pretty break-keep font-serif mb-5 sm:mb-6 max-w-md">
           흑백 스케치북과 목탄의 세계에 오신 것을 환영합니다.
           <br />
           <span className="text-amber-400/90 font-medium">
@@ -200,14 +200,14 @@ export const NicknameRoulette: React.FC<NicknameRouletteProps> = ({
         </p>
 
         {/* The 3-Reel Mechanical Slot Display */}
-        <div className="w-full grid grid-cols-3 gap-2 sm:gap-4 p-3 sm:p-4 bg-[#0c0a09] border-2 border-[#292524] rounded-2xl shadow-inner mb-6 relative">
+        <div className="w-full grid grid-cols-3 gap-1.5 sm:gap-4 p-2 sm:p-4 bg-[#0c0a09] border-2 border-[#292524] rounded-2xl shadow-inner mb-5 sm:mb-6 relative">
           {/* Glass glare effect */}
           <div className="absolute inset-0 pointer-events-none rounded-2xl bg-gradient-to-b from-white/5 via-transparent to-black/30" />
 
           {/* Reel 1: 형용사 */}
           <div className="flex flex-col items-center">
-            <div className="flex items-center justify-between w-full px-1 mb-1.5">
-              <span className="text-[11px] font-serif font-bold text-amber-400 tracking-wider">
+            <div className="flex items-center justify-between gap-0.5 w-full px-0.5 sm:px-1 mb-1.5 min-w-0">
+              <span className="text-[9px] min-[380px]:text-[10px] sm:text-[11px] font-serif font-bold text-amber-400 tracking-normal sm:tracking-wider whitespace-nowrap">
                 1. 형용사
               </span>
               <button
@@ -218,7 +218,7 @@ export const NicknameRoulette: React.FC<NicknameRouletteProps> = ({
                 }}
                 disabled={isSpinning}
                 title={lockAdj ? '고정 해제' : '슬롯 고정'}
-                className={`p-1 rounded text-[10px] transition-colors ${
+                className={`p-0.5 sm:p-1 rounded text-[10px] transition-colors shrink-0 ${
                   lockAdj
                     ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                     : 'text-stone-500 hover:text-stone-300'
@@ -257,8 +257,8 @@ export const NicknameRoulette: React.FC<NicknameRouletteProps> = ({
 
           {/* Reel 2: 명사 */}
           <div className="flex flex-col items-center">
-            <div className="flex items-center justify-between w-full px-1 mb-1.5">
-              <span className="text-[11px] font-serif font-bold text-amber-400 tracking-wider">
+            <div className="flex items-center justify-between gap-0.5 w-full px-0.5 sm:px-1 mb-1.5 min-w-0">
+              <span className="text-[9px] min-[380px]:text-[10px] sm:text-[11px] font-serif font-bold text-amber-400 tracking-normal sm:tracking-wider whitespace-nowrap">
                 2. 명사
               </span>
               <button
@@ -269,7 +269,7 @@ export const NicknameRoulette: React.FC<NicknameRouletteProps> = ({
                 }}
                 disabled={isSpinning}
                 title={lockNoun ? '고정 해제' : '슬롯 고정'}
-                className={`p-1 rounded text-[10px] transition-colors ${
+                className={`p-0.5 sm:p-1 rounded text-[10px] transition-colors shrink-0 ${
                   lockNoun
                     ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                     : 'text-stone-500 hover:text-stone-300'
@@ -305,8 +305,8 @@ export const NicknameRoulette: React.FC<NicknameRouletteProps> = ({
 
           {/* Reel 3: 숫자 */}
           <div className="flex flex-col items-center">
-            <div className="flex items-center justify-between w-full px-1 mb-1.5">
-              <span className="text-[11px] font-serif font-bold text-amber-400 tracking-wider">
+            <div className="flex items-center justify-between gap-0.5 w-full px-0.5 sm:px-1 mb-1.5 min-w-0">
+              <span className="text-[9px] min-[380px]:text-[10px] sm:text-[11px] font-serif font-bold text-amber-400 tracking-normal sm:tracking-wider whitespace-nowrap">
                 3. 숫자
               </span>
               <button
@@ -317,7 +317,7 @@ export const NicknameRoulette: React.FC<NicknameRouletteProps> = ({
                 }}
                 disabled={isSpinning}
                 title={lockNum ? '고정 해제' : '슬롯 고정'}
-                className={`p-1 rounded text-[10px] transition-colors ${
+                className={`p-0.5 sm:p-1 rounded text-[10px] transition-colors shrink-0 ${
                   lockNum
                     ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                     : 'text-stone-500 hover:text-stone-300'
@@ -357,10 +357,10 @@ export const NicknameRoulette: React.FC<NicknameRouletteProps> = ({
           <div className="text-[11px] font-serif text-stone-400 mb-1 tracking-wider uppercase">
             완성된 칭호 미리보기
           </div>
-          <div className="text-xl sm:text-2xl font-serif font-black text-amber-300 tracking-wide text-center flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>{currentNickname}</span>
-            <Sparkles className="w-4 h-4 text-amber-400" />
+          <div className="text-lg sm:text-2xl leading-tight font-serif font-black text-amber-300 tracking-wide text-center flex items-center justify-center gap-1.5 sm:gap-2 w-full min-w-0">
+            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+            <span className="break-keep text-balance">{currentNickname}</span>
+            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
           </div>
 
           {confirmedAnim && (
@@ -385,7 +385,10 @@ export const NicknameRoulette: React.FC<NicknameRouletteProps> = ({
             }`}
           >
             <Dices className={`w-4 h-4 text-amber-400 ${isSpinning ? 'animate-spin' : ''}`} />
-            <span>{isSpinning ? '슬롯 순차 정지 중...' : '다시 룰렛 돌리기 (Re-roll)'}</span>
+            <span className="break-keep text-center leading-tight">
+              {isSpinning ? '슬롯 순차 정지 중...' : '다시 룰렛 돌리기'}
+              {!isSpinning && <span className="hidden min-[400px]:inline"> (Re-roll)</span>}
+            </span>
           </button>
 
           {/* Confirm Button */}
@@ -401,7 +404,7 @@ export const NicknameRoulette: React.FC<NicknameRouletteProps> = ({
             }`}
           >
             <CheckCircle2 className="w-5 h-5 text-stone-950" />
-            <span>이름 확정 후 게임 진입</span>
+            <span className="break-keep text-center leading-tight">이름 확정 후 게임 진입</span>
           </button>
         </div>
 

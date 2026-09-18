@@ -1381,12 +1381,12 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
   return (
     <div className="flex-1 w-full h-full flex flex-col bg-[#0c0a09] text-stone-200 overflow-hidden select-none">
       {/* Top Studio Bar */}
-      <div className="flex flex-wrap items-center justify-between px-4 py-2 bg-[#1c1917] border-b border-[#292524] gap-2 shrink-0 z-10">
+      <div className="flex flex-wrap items-center justify-between px-2.5 sm:px-4 py-2 bg-[#1c1917] border-b border-[#292524] gap-2 shrink-0 z-10">
         {/* Nickname & Re-roll */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-[#292524] border border-[#44403c] rounded-lg">
+        <div className="flex items-center gap-2 w-full sm:w-auto min-w-0">
+          <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 bg-[#292524] border border-[#44403c] rounded-lg min-w-0">
             <span className="text-[11px] text-stone-400 font-serif">소각자:</span>
-            <span className="text-xs font-serif font-black text-amber-400 tracking-wide">
+            <span className="text-xs font-serif font-black text-amber-400 tracking-wide truncate">
               {nickname}
             </span>
           </div>
@@ -1396,7 +1396,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
               sound.playTap();
               onOpenRoulette();
             }}
-            className="px-2.5 py-1 text-xs font-serif text-stone-300 hover:text-amber-400 bg-stone-900 border border-stone-700 hover:border-amber-500/50 rounded-lg transition-colors flex items-center gap-1"
+            className="px-2.5 py-1 text-xs font-serif text-stone-300 hover:text-amber-400 bg-stone-900 border border-stone-700 hover:border-amber-500/50 rounded-lg transition-colors flex items-center gap-1 whitespace-nowrap shrink-0"
             title="닉네임 슬롯 룰렛 다시 돌리기"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -1405,11 +1405,11 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
         </div>
 
         {/* Paper Templates */}
-        <div className="flex items-center bg-stone-900/90 p-1 rounded-xl border border-stone-800 gap-1">
+        <div className="flex items-center flex-nowrap bg-stone-900/90 p-1 rounded-xl border border-stone-800 gap-1 w-full lg:w-auto overflow-x-auto scrollbar-none">
           <button
             type="button"
             onClick={() => resetPaper('sketch_butterfly')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-serif transition-all flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-serif transition-all flex items-center gap-1 whitespace-nowrap shrink-0 ${
               currentTemplate === 'sketch_butterfly'
                 ? 'bg-[#292524] text-amber-400 border border-amber-500/40 shadow-sm'
                 : 'text-stone-400 hover:text-stone-200'
@@ -1419,7 +1419,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
             <span>나비 스케치</span>
           </button>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               id="template-secret-note"
               type="button"
@@ -1430,7 +1430,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
                   handleNextStory();
                 }
               }}
-              className={`px-2.5 py-1 rounded-lg text-xs font-serif transition-all flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-serif transition-all flex items-center gap-1 whitespace-nowrap ${
                 currentTemplate === 'secret_note'
                   ? 'bg-[#292524] text-amber-400 border border-amber-500/40 shadow-sm'
                   : 'text-stone-400 hover:text-stone-200'
@@ -1462,7 +1462,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
           <button
             type="button"
             onClick={() => resetPaper('contract')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-serif transition-all flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-serif transition-all flex items-center gap-1 whitespace-nowrap shrink-0 ${
               currentTemplate === 'contract'
                 ? 'bg-[#292524] text-amber-400 border border-amber-500/40 shadow-sm'
                 : 'text-stone-400 hover:text-stone-200'
@@ -1475,7 +1475,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
           <button
             type="button"
             onClick={() => resetPaper('blank_canvas')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-serif transition-all flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-serif transition-all flex items-center gap-1 whitespace-nowrap shrink-0 ${
               currentTemplate === 'blank_canvas'
                 ? 'bg-[#292524] text-amber-400 border border-amber-500/40 shadow-sm'
                 : 'text-stone-400 hover:text-stone-200'
@@ -1487,7 +1487,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
         </div>
 
         {/* Burn progress & Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <div className="flex items-center gap-1.5 px-2.5 py-1 bg-stone-900 border border-stone-800 rounded-lg text-xs font-serif">
             <Flame className="w-3.5 h-3.5 text-amber-500" />
             <span className="text-stone-400">소각도:</span>
@@ -1680,9 +1680,9 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
       </div>
 
       {/* Bottom Tool Palette Bar */}
-      <div className="flex flex-wrap items-center justify-between px-4 py-2 bg-[#1c1917] border-t border-[#292524] gap-2 shrink-0 z-10">
+      <div className="flex flex-wrap items-center justify-between px-2.5 sm:px-4 py-2 bg-[#1c1917] border-t border-[#292524] gap-2 shrink-0 z-10">
         {/* Fire Tools & Pencil Selection with Distinct Physics Profiles */}
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto scrollbar-none w-full xl:w-auto">
           <span className="text-[11px] font-serif text-stone-400 hidden sm:inline mr-1">도구:</span>
 
           <button
@@ -1693,7 +1693,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
               setActiveTool('match');
             }}
             title="성냥: 부드럽고 자연스러운 목재 화염 확산"
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-serif font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-serif font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               activeTool === 'match'
                 ? 'bg-amber-500 text-stone-950 shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
                 : 'bg-stone-900 text-stone-300 border border-stone-800 hover:border-stone-700'
@@ -1711,7 +1711,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
               setActiveTool('lighter');
             }}
             title="지포 라이터: 고온의 집중 화염으로 날카롭고 빠른 관통 천공"
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-serif font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-serif font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               activeTool === 'lighter'
                 ? 'bg-amber-500 text-stone-950 shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
                 : 'bg-stone-900 text-stone-300 border border-stone-800 hover:border-stone-700'
@@ -1729,7 +1729,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
               setActiveTool('torch');
             }}
             title="목탄 화염: 광범위한 거대 화염과 맹렬한 연쇄 소각"
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-serif font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-serif font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               activeTool === 'torch'
                 ? 'bg-amber-500 text-stone-950 shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
                 : 'bg-stone-900 text-stone-300 border border-stone-800 hover:border-stone-700'
@@ -1747,7 +1747,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
               setActiveTool('ember');
             }}
             title="잉걸불/인두: 지나간 자리만 얇게 지져 태우는 우아한 낙화선"
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-serif font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-serif font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               activeTool === 'ember'
                 ? 'bg-amber-500 text-stone-950 shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
                 : 'bg-stone-900 text-stone-300 border border-stone-800 hover:border-stone-700'
@@ -1765,7 +1765,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
               setActiveTool('pencil');
             }}
             title="2B 흑연 연필: 종이 위에 그림이나 글귀 자유 드로잉"
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-serif font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-serif font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               activeTool === 'pencil'
                 ? 'bg-stone-100 text-stone-950 shadow-md ring-1 ring-white'
                 : 'bg-stone-900 text-stone-300 border border-stone-800 hover:border-stone-700'
@@ -1777,13 +1777,13 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
         </div>
 
         {/* Physical Fire Actions (Blow, Tap Ash, Extinguish, New Paper) */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-nowrap overflow-x-auto scrollbar-none w-full xl:w-auto">
           {/* Blow air */}
           <button
             type="button"
             onClick={handleBlowAir}
             disabled={isBlowing}
-            className={`px-3 py-1.5 rounded-xl text-xs font-serif font-bold flex items-center gap-1.5 transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-serif font-bold flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0 ${
               isBlowing
                 ? 'bg-amber-600 text-white animate-pulse'
                 : 'bg-stone-900 hover:bg-stone-800 text-stone-300 border border-stone-800 hover:border-amber-400'
@@ -1798,7 +1798,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
           <button
             type="button"
             onClick={handleTapAsh}
-            className="px-2.5 py-1.5 rounded-xl text-xs font-serif text-stone-400 hover:text-stone-200 bg-stone-900 border border-stone-800 hover:border-stone-700"
+            className="px-2.5 py-1.5 rounded-xl text-xs font-serif text-stone-400 hover:text-stone-200 bg-stone-900 border border-stone-800 hover:border-stone-700 whitespace-nowrap shrink-0"
             title="탄 재를 책상 위로 텁니다"
           >
             재 털기
@@ -1808,7 +1808,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
           <button
             type="button"
             onClick={handleExtinguish}
-            className="px-2.5 py-1.5 rounded-xl text-xs font-serif text-sky-400 hover:text-sky-300 bg-stone-900 border border-stone-800 hover:border-sky-500/50 flex items-center gap-1"
+            className="px-2.5 py-1.5 rounded-xl text-xs font-serif text-sky-400 hover:text-sky-300 bg-stone-900 border border-stone-800 hover:border-sky-500/50 flex items-center gap-1 whitespace-nowrap shrink-0"
             title="불을 끄고 탄 상태를 보존합니다"
           >
             <Droplets className="w-3.5 h-3.5" />
@@ -1819,7 +1819,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
           <button
             type="button"
             onClick={() => resetPaper()}
-            className="px-3 py-1.5 rounded-xl text-xs font-serif font-bold text-stone-300 hover:text-white bg-stone-900 border border-stone-800 hover:border-stone-700 flex items-center gap-1"
+            className="px-3 py-1.5 rounded-xl text-xs font-serif font-bold text-stone-300 hover:text-white bg-stone-900 border border-stone-800 hover:border-stone-700 flex items-center gap-1 whitespace-nowrap shrink-0"
             title="새 종이 꺼내기"
           >
             <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
