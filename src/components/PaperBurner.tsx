@@ -12,6 +12,8 @@ import {
   Scroll,
   HelpCircle,
   Shuffle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { BurnTool, PaperTemplate, TraceGuideType, BurnHole, Particle, PencilStroke } from '../types';
 import { sound } from '../utils/audio';
@@ -48,7 +50,11 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
   const [storyIndex, setStoryIndex] = useState<number>(() =>
     Math.floor(Math.random() * DOPAMINE_STORIES.length)
   );
+  const [storyPage, setStoryPage] = useState<number>(0);
   const [customVow, setCustomVow] = useState<string>('');
+  const activeStory =
+    DOPAMINE_STORIES[storyIndex % DOPAMINE_STORIES.length] || DOPAMINE_STORIES[0];
+  const storyPageCount = Math.max(1, Math.ceil(activeStory.lines.length / 5));
 
   // Pointer state
   const isPointerDown = useRef<boolean>(false);
@@ -89,6 +95,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
     particlesRef.current = [];
     strokesRef.current = [];
     setBurnPercent(0);
+    setStoryPage(0);
     setCurrentTemplate('secret_note');
   }, []);
 
@@ -99,6 +106,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
     particlesRef.current = [];
     strokesRef.current = [];
     setBurnPercent(0);
+    setStoryPage(0);
     if (template === 'secret_note') {
       setStoryIndex(prev => {
         let next = Math.floor(Math.random() * DOPAMINE_STORIES.length);
@@ -434,15 +442,32 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
         } else if (currentTemplate === 'secret_note') {
           // Handwritten Secret Note / Dopamine Makjang Stories!
           const story =
-            DOPAMINE_STORIES[storyIndex % DOPAMINE_STORIES.length] || DOPAMINE_STORIES[0];
+             DOPAMINE_STORIES[storyIndex % DOPAMINE_STORIES.length] || DOPAMINE_STORIES[0];
+          const linesPerPage = 5;
+          const storyPageCount = Math.max(1, Math.ceil(story.lines.length / linesPerPage));
+          const safeStoryPage = Math.min(storyPage, storyPageCount - 1);
+          const pageLines = story.lines.slice(
+            safeStoryPage * linesPerPage,
+            (safeStoryPage + 1) * linesPerPage
+          );
+          const isLastStoryPage = safeStoryPage === storyPageCount - 1;
 
           pCtx.save();
           pCtx.fillStyle = '#1c1917';
           pCtx.textAlign = 'left';
 
-          // Header Category & Top Secret Badge
+          // Header Category & page marker
           pCtx.font = 'bold 15px serif';
-          pCtx.fillText('소각해야 할 도파민 비밀 일기', pb.x + 36, pb.y + 50);
+          pCtx.fillText(
+            safeStoryPage === 0 ? '소각해야 할 도파민 비밀 일기' : '도파민 비밀 일기 · 계속',
+            pb.x + 36,
+            pb.y + 50
+          );
+          pCtx.textAlign = 'right';
+          pCtx.font = 'bold 11px serif';
+          pCtx.fillStyle = '#78716c';
+          pCtx.fillText(`${safeStoryPage + 1} / ${storyPageCount}`, pb.x + pb.width - 36, pb.y + 50);
+          pCtx.textAlign = 'left';
 
           // Red confidential label
           pCtx.fillStyle = '#b91c1c';
@@ -452,12 +477,14 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
           // Story Title
           pCtx.fillStyle = '#1c1917';
           pCtx.font = 'bold 13.5px serif';
-          pCtx.fillText(`사연: ${story.title}`, pb.x + 36, pb.y + 90);
+          const displayTitle = story.title.length > 32 ? `${story.title.slice(0, 31)}…` : story.title;
+          pCtx.fillText(`사연: ${displayTitle}`, pb.x + 36, pb.y + 90);
 
           // Date & Author
           pCtx.font = 'italic 11px serif';
           pCtx.fillStyle = '#57534e';
-          pCtx.fillText(`기록: ${story.date} | 보관자: ${nickname}`, pb.x + 36, pb.y + 109);
+          const displayNickname = nickname.length > 16 ? `${nickname.slice(0, 15)}…` : nickname;
+          pCtx.fillText(`기록: ${story.date} | 보관자: ${displayNickname}`, pb.x + 36, pb.y + 109);
 
           // Ruled lined paper
           const lineSpacing = 26;
@@ -484,7 +511,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
           let currentY = startY + 18;
           const maxTextWidth = pb.width - 70;
 
-          story.lines.forEach(line => {
+          pageLines.forEach(line => {
             if (currentY > pb.y + pb.height - 65) return;
 
             if (pCtx.measureText(line).width <= maxTextWidth) {
@@ -512,28 +539,34 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
             }
           });
 
-          // Confidential Whisper at bottom
-          pCtx.fillStyle = '#b91c1c';
-          pCtx.font = 'italic 11px serif';
-          pCtx.fillText(`⚠️ ${story.whisper}`, pb.x + 38, pb.y + pb.height - 35);
+          if (isLastStoryPage) {
+            // Confidential Whisper at bottom, separated from the body and seal.
+            pCtx.fillStyle = '#b91c1c';
+            pCtx.font = 'italic 10.5px serif';
+            const whisper = story.whisper.length > 37 ? `${story.whisper.slice(0, 36)}…` : story.whisper;
+            pCtx.fillText(`⚠️ ${whisper}`, pb.x + 38, pb.y + pb.height - 48);
 
-          // Discreet AI Disclaimer (elegantly integrated at the document foot)
-          pCtx.font = 'italic 9.5px serif';
-          pCtx.fillStyle = 'rgba(120, 113, 108, 0.65)';
-          pCtx.fillText('※ 본 사연은 AI가 창작한 가상의 픽션 기록이며 실제 인물·단체와 무관합니다.', pb.x + 38, pb.y + pb.height - 18);
+            pCtx.font = 'italic 9.5px serif';
+            pCtx.fillStyle = 'rgba(120, 113, 108, 0.65)';
+            pCtx.fillText('※ AI가 창작한 가상의 픽션이며 실제 인물·단체와 무관합니다.', pb.x + 38, pb.y + pb.height - 20);
 
-          // Top Secret Red Stamp in bottom right
-          drawPencilCircle(pCtx, pb.x + pb.width - 65, pb.y + pb.height - 58, 24, {
-            color: '#dc2626',
-            width: 2,
-            loops: 2,
-          });
-          pCtx.fillStyle = '#dc2626';
-          pCtx.font = 'bold 9.5px serif';
-          pCtx.textAlign = 'center';
-          pCtx.fillText('TOP SECRET', pb.x + pb.width - 65, pb.y + pb.height - 60);
-          pCtx.font = '8.5px serif';
-          pCtx.fillText('1급 완전소각', pb.x + pb.width - 65, pb.y + pb.height - 50);
+            drawPencilCircle(pCtx, pb.x + pb.width - 64, pb.y + pb.height - 92, 24, {
+              color: '#dc2626',
+              width: 2,
+              loops: 2,
+            });
+            pCtx.fillStyle = '#dc2626';
+            pCtx.font = 'bold 9.5px serif';
+            pCtx.textAlign = 'center';
+            pCtx.fillText('TOP SECRET', pb.x + pb.width - 64, pb.y + pb.height - 94);
+            pCtx.font = '8.5px serif';
+            pCtx.fillText('1급 완전소각', pb.x + pb.width - 64, pb.y + pb.height - 84);
+          } else {
+            pCtx.fillStyle = '#78716c';
+            pCtx.font = 'italic 11px serif';
+            pCtx.textAlign = 'center';
+            pCtx.fillText('— 다음 장에 계속 —', cx, pb.y + pb.height - 28);
+          }
 
           pCtx.restore();
         } else if (currentTemplate === 'contract') {
@@ -669,7 +702,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
           // Blank Canvas (자유 도화지)
           if (traceGuide !== 'none') {
             // Render Selected Dotted Tracing Template
-            drawTraceGuide(pCtx, traceGuide, cx, cy, 1.05);
+            drawTraceGuide(pCtx, traceGuide, cx, cy - 10, 1.62);
 
             // Subtle watermark label at bottom of canvas paper
             pCtx.save();
@@ -678,13 +711,13 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
             pCtx.textAlign = 'center';
             const guideName =
               traceGuide === 'octopus'
-                ? '점선 문어·해파리 도안'
+                ? '문어·해파리 도안'
                 : traceGuide === 'snail'
-                ? '점선 소용돌이 달팽이 도안'
+                ? '달팽이 도안'
                 : traceGuide === 'cat'
-                ? '점선 아기 고양이 도안'
-                : '점선 하트&별 도안';
-            pCtx.fillText(`[따라 그리기: ${guideName}] 2B 연필로 덧그리거나 잉걸불(인두)로 점선을 태워보세요`, cx, pb.y + pb.height - 24);
+                ? '아기 고양이 도안'
+                : '하트&별 도안';
+            pCtx.fillText(`[따라 그리기: ${guideName}] 2B 연필이나 잉걸불로 선을 따라가 보세요`, cx, pb.y + pb.height - 24);
             pCtx.restore();
           } else if (strokesRef.current.length === 0) {
             pCtx.save();
@@ -1249,7 +1282,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, [currentTemplate, activeTool, isBlowing, blowLevel, nickname, storyIndex, customVow, traceGuide]);
+  }, [currentTemplate, activeTool, isBlowing, blowLevel, nickname, storyIndex, storyPage, customVow, traceGuide]);
 
   // Touch / Pointer Event Handlers
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -1435,7 +1468,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
         </div>
 
         {/* Paper Templates */}
-        <div className="flex items-center flex-wrap lg:flex-nowrap bg-stone-900/90 p-1 rounded-xl border border-stone-800 gap-1 w-full lg:w-auto">
+        <div className="ui-scrollbar flex items-center flex-nowrap overflow-x-auto bg-stone-900/90 p-1 pb-2 rounded-xl border border-stone-800 gap-1 w-full lg:w-auto lg:max-w-[48vw]">
           <button
             type="button"
             onClick={() => resetPaper('sketch_butterfly')}
@@ -1456,8 +1489,6 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
               onClick={() => {
                 if (currentTemplate !== 'secret_note') {
                   resetPaper('secret_note');
-                } else {
-                  handleNextStory();
                 }
               }}
               className={`px-2.5 py-1 rounded-lg text-xs font-serif transition-all flex items-center gap-1 whitespace-nowrap ${
@@ -1467,7 +1498,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
               }`}
               title={
                 currentTemplate === 'secret_note'
-                  ? '클릭 시 다른 도파민 비밀 일기 사연으로 새로고침'
+                  ? '현재 비밀 일기 문서'
                   : '도파민 막장 비밀 일기 보기'
               }
             >
@@ -1475,18 +1506,6 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
               <span>비밀 일기</span>
             </button>
 
-            {currentTemplate === 'secret_note' && (
-              <button
-                id="btn-next-story"
-                type="button"
-                onClick={handleNextStory}
-                className="px-2 py-1 rounded-lg text-[11px] font-serif font-bold text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 flex items-center gap-1 transition-all"
-                title="다른 도파민 막장 사연으로 즉시 변경"
-              >
-                <Shuffle className="w-3 h-3" />
-                <span>다음 사연</span>
-              </button>
-            )}
           </div>
 
           <button
@@ -1544,6 +1563,54 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
         </div>
       </div>
 
+      {/* Secret diary page navigation — document pages are separate from story changes. */}
+      {currentTemplate === 'secret_note' && (
+        <div className="flex items-center justify-between gap-3 px-3 sm:px-4 py-2 bg-[#211d19] border-b border-amber-900/40 shrink-0 z-10">
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-stone-500 font-bold">문서 페이지</div>
+            <div className="hidden sm:block text-xs text-stone-300 font-serif">
+              한 장씩 넘겨 읽은 뒤 소각하세요
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              id="btn-prev-story-page"
+              type="button"
+              onClick={() => setStoryPage(page => Math.max(0, page - 1))}
+              disabled={storyPage === 0}
+              className="p-1.5 rounded-lg border border-stone-700 bg-stone-900 text-stone-300 disabled:opacity-30 disabled:cursor-not-allowed"
+              title="이전 장"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="min-w-[48px] text-center text-xs font-mono font-bold text-amber-400">
+              {storyPage + 1} / {storyPageCount}
+            </span>
+            <button
+              id="btn-next-story-page"
+              type="button"
+              onClick={() => setStoryPage(page => Math.min(storyPageCount - 1, page + 1))}
+              disabled={storyPage >= storyPageCount - 1}
+              className="p-1.5 rounded-lg border border-stone-700 bg-stone-900 text-stone-300 disabled:opacity-30 disabled:cursor-not-allowed"
+              title="다음 장"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            <div className="h-5 w-px bg-stone-700 mx-1" aria-hidden="true" />
+            <button
+              id="btn-next-story"
+              type="button"
+              onClick={handleNextStory}
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-serif font-bold text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 flex items-center gap-1 whitespace-nowrap"
+              title="다른 비밀 일기로 변경"
+            >
+              <Shuffle className="w-3 h-3" />
+              <span>다음 사연</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Interactive Vow Inscription Banner (망각의 서약서 전용 자필 소각문 입력기 - 여러 줄 / 줄바꿈 지원) */}
       {currentTemplate === 'contract' && (
         <div className="flex flex-wrap items-center gap-2.5 px-4 py-2 bg-[#231e1a] border-b border-amber-900/40 shrink-0 z-10 animate-fadeIn">
@@ -1594,13 +1661,13 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
 
       {/* Trace Guide Selector for Blank Canvas (자유 도화지 전용 따라 그리기 도안 선택 배너) */}
       {currentTemplate === 'blank_canvas' && (
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-[#211d19] border-b border-amber-900/40 shrink-0 z-10 animate-fadeIn">
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 px-3 sm:px-4 py-2 bg-[#211d19] border-b border-amber-900/40 shrink-0 z-10 animate-fadeIn">
+          <div className="min-w-0 flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="flex items-center gap-1.5 text-amber-300">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span className="text-xs font-serif font-bold whitespace-nowrap">따라 그리기 도안:</span>
             </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="ui-scrollbar flex items-center gap-1.5 overflow-x-auto flex-nowrap pb-2 min-w-0">
               <button
                 type="button"
                 onClick={() => {
@@ -1612,10 +1679,10 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
                     ? 'bg-amber-500 text-stone-950 font-bold shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
                     : 'bg-stone-900 text-stone-300 border border-stone-800 hover:border-stone-700'
                 }`}
-                title="귀여운 점선 문어/해파리 도안 (동그란 머리와 물결치는 다리)"
+                title="귀여운 문어·해파리 따라 그리기 도안"
               >
                 <span>🐙</span>
-                <span>점선 문어·해파리</span>
+                <span className="whitespace-nowrap">문어·해파리</span>
               </button>
 
               <button
@@ -1629,10 +1696,10 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
                     ? 'bg-amber-500 text-stone-950 font-bold shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
                     : 'bg-stone-900 text-stone-300 border border-stone-800 hover:border-stone-700'
                 }`}
-                title="점선 소용돌이 달팽이 도안 (돌돌 말린 껍질과 더듬이 눈)"
+                title="소용돌이 달팽이 따라 그리기 도안"
               >
                 <span>🐌</span>
-                <span>점선 달팽이</span>
+                <span className="whitespace-nowrap">달팽이</span>
               </button>
 
               <button
@@ -1646,10 +1713,10 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
                     ? 'bg-amber-500 text-stone-950 font-bold shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
                     : 'bg-stone-900 text-stone-300 border border-stone-800 hover:border-stone-700'
                 }`}
-                title="점선 아기고양이 도안 (쫑긋한 귀와 수염)"
+                title="아기 고양이 따라 그리기 도안"
               >
                 <span>🐱</span>
-                <span>점선 고양이</span>
+                <span className="whitespace-nowrap">고양이</span>
               </button>
 
               <button
@@ -1663,10 +1730,10 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
                     ? 'bg-amber-500 text-stone-950 font-bold shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
                     : 'bg-stone-900 text-stone-300 border border-stone-800 hover:border-stone-700'
                 }`}
-                title="점선 하트와 별 도안"
+                title="하트와 별 따라 그리기 도안"
               >
                 <span>💖</span>
-                <span>점선 하트&별</span>
+                <span className="whitespace-nowrap">하트&별</span>
               </button>
 
               <button
@@ -1710,10 +1777,11 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
       </div>
 
       {/* Bottom Tool Palette Bar */}
-      <div className="flex flex-wrap items-center justify-between px-2.5 sm:px-4 py-2 bg-[#1c1917] border-t border-[#292524] gap-2 shrink-0 z-10">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_auto] gap-2 px-2.5 sm:px-4 py-2 bg-[#1c1917] border-t border-[#292524] shrink-0 z-10">
         {/* Fire Tools & Pencil Selection with Distinct Physics Profiles */}
-        <div className="flex items-center gap-1.5 flex-wrap xl:flex-nowrap w-full xl:w-auto">
-          <span className="text-[11px] font-serif text-stone-400 hidden sm:inline mr-1">도구:</span>
+        <section className="min-w-0 rounded-lg border border-stone-800 bg-stone-950/30 p-1.5" aria-label="소각 도구">
+          <div className="text-[9px] uppercase tracking-[0.16em] text-stone-500 font-bold px-1 pb-1">소각 도구</div>
+          <div className="ui-scrollbar flex items-center gap-1.5 overflow-x-auto flex-nowrap w-full pb-2">
 
           <button
             id="tool-match"
@@ -1804,10 +1872,13 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
             <Pencil className="w-3.5 h-3.5" />
             <span>2B 연필 <span className="text-[10px] font-normal opacity-75 hidden md:inline">(자유 필기)</span></span>
           </button>
-        </div>
+          </div>
+        </section>
 
         {/* Physical Fire Actions (Blow, Tap Ash, Extinguish, New Paper) */}
-        <div className="flex items-center gap-2 flex-wrap xl:flex-nowrap w-full xl:w-auto">
+        <section className="min-w-0 rounded-lg border border-stone-800 bg-stone-950/30 p-1.5" aria-label="종이 동작">
+          <div className="text-[9px] uppercase tracking-[0.16em] text-stone-500 font-bold px-1 pb-1">종이 동작</div>
+          <div className="ui-scrollbar flex items-center gap-2 overflow-x-auto flex-nowrap w-full pb-2">
           {/* Blow air */}
           <button
             type="button"
@@ -1855,7 +1926,8 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
             <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
             <span>새 종이</span>
           </button>
-        </div>
+          </div>
+        </section>
       </div>
 
       {/* Guide Modal */}

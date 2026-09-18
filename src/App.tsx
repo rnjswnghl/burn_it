@@ -1,4 +1,5 @@
-import React, { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
+import React, { useState, useEffect, useRef, Component, ErrorInfo, ReactNode } from 'react';
+import { ArrowUp } from 'lucide-react';
 import { Header } from './components/Header';
 import { NicknameRoulette } from './components/NicknameRoulette';
 import { PaperBurner } from './components/PaperBurner';
@@ -65,6 +66,8 @@ export default function App() {
 
   // Modal toggle for re-rolling nickname from inside the game
   const [showRouletteModal, setShowRouletteModal] = useState<boolean>(false);
+  const [showBackToTop, setShowBackToTop] = useState<boolean>(false);
+  const scrollRootRef = useRef<HTMLDivElement | null>(null);
 
   const handleConfirmNickname = (newNickname: string) => {
     try {
@@ -78,7 +81,11 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-col w-full h-dvh min-h-dvh bg-[#0c0a09] text-stone-200 overflow-x-hidden overflow-y-auto md:h-full md:min-h-screen md:overflow-hidden font-sans">
+      <div
+        ref={scrollRootRef}
+        onScroll={event => setShowBackToTop(event.currentTarget.scrollTop > 320)}
+        className="ui-scrollbar flex flex-col w-full h-dvh min-h-dvh bg-[#0c0a09] text-stone-200 overflow-x-hidden overflow-y-auto md:h-full md:min-h-screen md:overflow-hidden font-sans"
+      >
         {/* If no nickname is confirmed yet (first visit), start strictly with Nickname Slot Roulette */}
         {!confirmedNickname ? (
           <NicknameRoulette onConfirm={handleConfirmNickname} />
@@ -108,6 +115,18 @@ export default function App() {
                   />
                 </div>
               </div>
+            )}
+
+            {showBackToTop && (
+              <button
+                type="button"
+                onClick={() => scrollRootRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="md:hidden fixed right-4 bottom-4 z-40 w-11 h-11 rounded-full border border-amber-500/50 bg-stone-950/95 text-amber-400 shadow-xl shadow-black/50 flex items-center justify-center"
+                aria-label="페이지 맨 위로 이동"
+                title="맨 위로"
+              >
+                <ArrowUp className="w-5 h-5" />
+              </button>
             )}
           </>
         )}

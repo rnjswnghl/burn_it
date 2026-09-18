@@ -145,67 +145,62 @@ function drawDottedSnail(
   scale: number
 ) {
   ctx.save();
-  ctx.setLineDash([9 * scale, 6 * scale]);
-  ctx.lineWidth = 3.2 * scale;
+  ctx.setLineDash([8 * scale, 5.5 * scale]);
+  ctx.lineWidth = 2.4 * scale;
   ctx.strokeStyle = '#1c1917';
 
-  // 1. Snail Shell: Archimedean Spiral (소용돌이 등껍질)
-  const shellCx = cx - 35 * scale;
-  const shellCy = cy + 12 * scale;
-  const maxTheta = 4.3 * Math.PI; // about 2.15 turns
+  // 1. A clean outer shell and a separate inward spiral. Keeping these as
+  // two deliberate paths prevents the dense scribble produced by the old
+  // ever-expanding Archimedean spiral.
+  const shellCx = cx - 30 * scale;
+  const shellCy = cy + 4 * scale;
+  const shellRx = 72 * scale;
+  const shellRy = 64 * scale;
+  ctx.beginPath();
+  ctx.ellipse(shellCx, shellCy, shellRx, shellRy, -0.08, 0, Math.PI * 2);
+  ctx.stroke();
 
   ctx.beginPath();
-  const steps = 90;
-  for (let i = 0; i <= steps; i++) {
-    const t = (i / steps) * maxTheta;
-    const r = (8 + 14 * t) * scale * 0.95;
-    const px = shellCx + Math.cos(t) * r;
-    const py = shellCy + Math.sin(t) * r;
+  const spiralSteps = 62;
+  for (let i = 0; i <= spiralSteps; i++) {
+    const t = (i / spiralSteps) * Math.PI * 2.15;
+    const radius = (50 - 5.8 * t) * scale;
+    const px = shellCx + Math.cos(t) * radius;
+    const py = shellCy + Math.sin(t) * radius * 0.88;
     if (i === 0) ctx.moveTo(px, py);
     else ctx.lineTo(px, py);
   }
   ctx.stroke();
 
-  // 2. Snail Foot / Body Outline (아랫배 & 꼬리 & 가슴)
+  // 2. Low, open body silhouette with a clearly separated head.
   ctx.beginPath();
-  // Tail loop at rear
-  ctx.moveTo(shellCx - 70 * scale, shellCy + 60 * scale);
-  ctx.quadraticCurveTo(shellCx - 95 * scale, shellCy + 75 * scale, shellCx - 90 * scale, shellCy + 88 * scale);
-  ctx.quadraticCurveTo(shellCx - 80 * scale, shellCy + 96 * scale, shellCx - 20 * scale, shellCy + 98 * scale);
-  ctx.quadraticCurveTo(cx + 40 * scale, shellCy + 100 * scale, cx + 70 * scale, shellCy + 85 * scale);
-  // Head front ascending
-  ctx.quadraticCurveTo(cx + 95 * scale, shellCy + 55 * scale, cx + 90 * scale, shellCy + 5 * scale);
-  ctx.quadraticCurveTo(cx + 85 * scale, shellCy - 20 * scale, cx + 60 * scale, shellCy - 15 * scale);
-  // Neck descending back to shell
-  ctx.quadraticCurveTo(cx + 35 * scale, shellCy - 5 * scale, shellCx + 35 * scale, shellCy + 25 * scale);
+  ctx.moveTo(cx - 103 * scale, cy + 56 * scale);
+  ctx.quadraticCurveTo(cx - 120 * scale, cy + 68 * scale, cx - 96 * scale, cy + 74 * scale);
+  ctx.quadraticCurveTo(cx - 18 * scale, cy + 84 * scale, cx + 68 * scale, cy + 68 * scale);
+  ctx.quadraticCurveTo(cx + 96 * scale, cy + 60 * scale, cx + 94 * scale, cy + 16 * scale);
+  ctx.quadraticCurveTo(cx + 92 * scale, cy - 5 * scale, cx + 70 * scale, cy - 2 * scale);
+  ctx.quadraticCurveTo(cx + 48 * scale, cy + 2 * scale, cx + 32 * scale, cy + 28 * scale);
   ctx.stroke();
 
-  // 3. Eye Stalks & Circular Dotted Eyes (더듬이 눈)
-  // Left eye stalk & circular eye
-  const leftEyeCx = cx + 32 * scale;
-  const leftEyeCy = cy - 62 * scale;
-  const eyeRadius = 18 * scale;
+  // 3. Eye stalks remain outside the shell so the face reads at a glance.
+  const leftEyeCx = cx + 54 * scale;
+  const leftEyeCy = cy - 46 * scale;
+  const rightEyeCx = cx + 88 * scale;
+  const rightEyeCy = cy - 48 * scale;
+  const eyeRadius = 11 * scale;
 
   ctx.beginPath();
-  // stalk lines
-  ctx.moveTo(cx + 45 * scale, cy - 15 * scale);
-  ctx.lineTo(leftEyeCx + 5 * scale, leftEyeCy + 16 * scale);
+  ctx.moveTo(cx + 58 * scale, cy - 2 * scale);
+  ctx.lineTo(leftEyeCx + 2 * scale, leftEyeCy + 10 * scale);
   ctx.stroke();
-
   ctx.beginPath();
   ctx.arc(leftEyeCx, leftEyeCy, eyeRadius, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Right eye stalk & circular eye
-  const rightEyeCx = cx + 76 * scale;
-  const rightEyeCy = cy - 65 * scale;
-
   ctx.beginPath();
-  // stalk lines
-  ctx.moveTo(cx + 65 * scale, cy - 18 * scale);
-  ctx.lineTo(rightEyeCx - 5 * scale, rightEyeCy + 16 * scale);
+  ctx.moveTo(cx + 76 * scale, cy - 3 * scale);
+  ctx.lineTo(rightEyeCx - 2 * scale, rightEyeCy + 10 * scale);
   ctx.stroke();
-
   ctx.beginPath();
   ctx.arc(rightEyeCx, rightEyeCy, eyeRadius, 0, Math.PI * 2);
   ctx.stroke();
@@ -216,18 +211,18 @@ function drawDottedSnail(
   ctx.save();
   ctx.fillStyle = '#1c1917';
   ctx.beginPath();
-  ctx.arc(leftEyeCx + 2 * scale, leftEyeCy, 7.5 * scale, 0, Math.PI * 2);
+  ctx.arc(leftEyeCx + 1 * scale, leftEyeCy, 4.2 * scale, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.beginPath();
-  ctx.arc(rightEyeCx + 2 * scale, rightEyeCy, 7.5 * scale, 0, Math.PI * 2);
+  ctx.arc(rightEyeCx + 1 * scale, rightEyeCy, 4.2 * scale, 0, Math.PI * 2);
   ctx.fill();
 
   // 5. Smiling Mouth on Head
   ctx.lineWidth = 3.2 * scale;
   ctx.strokeStyle = '#1c1917';
   ctx.beginPath();
-  ctx.arc(cx + 56 * scale, cy + 5 * scale, 14 * scale, 0.15 * Math.PI, 0.85 * Math.PI);
+  ctx.arc(cx + 72 * scale, cy + 21 * scale, 10 * scale, 0.15 * Math.PI, 0.85 * Math.PI);
   ctx.stroke();
   ctx.restore();
 }
