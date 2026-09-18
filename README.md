@@ -1,30 +1,20 @@
-# Burn IT
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+</div>
 
-무거운 생각이나 이미지를 브라우저 안에서 직접 태우는 캔버스 미니게임입니다.
+# Run and deploy your AI Studio app
 
-## 실행
+This contains everything you need to run your app locally.
 
-별도 빌드가 없는 정적 웹 앱입니다. 로컬 서버에서 `index.html`을 열면 됩니다.
+View your app in AI Studio: https://ai.studio/apps/41f7189e-0b67-4206-8f64-773faa2b77f6
 
-```powershell
-python -m http.server 4173
-```
+## Run Locally
 
-## 핵심 기능
+**Prerequisites:**  Node.js
 
-- 야근 오피스·학교 본관·회사 연구동의 점화 스테이지와 사용자 이미지 업로드 모드
-- 포인터로 문질러 번지는 캔버스 소각 효과
-- 여러 갈래의 큰 불꽃, 고밀도 불티, 그을음과 탄화 구멍이 겹치는 강한 소각 연출
-- 건물별 주황색 점화 포인트를 모두 찾아 클릭하면 자동 전소 및 스테이지 클리어
-- Web Audio로 실시간 생성하는 불꽃 ASMR 및 음소거
-- 첫 방문 슬롯 룰렛 닉네임 생성, 주사위 재생성, 사용자/플레이 기록 LocalStorage 저장
-- 회원가입·소셜 로그인·서버 전송 없이 브라우저 안에서만 사용자 기억
-- 반응형 레이아웃, 키보드 포커스, 모션 감소 설정 지원
 
-## 디자인 시스템
-
-- 방향: 흰 종이 위 펜 드로잉, 굵기·거칠기·해칭이 다른 선과 정갈한 이탤릭
-- 색: Paper `#FFFFFF`, Ink `#171715`, Fire `#FF4D00`, Ember `#FFB000`
-- 형태: 2px 이하의 거의 각진 모서리, 1px 잉크 선, 카드 대신 분할선
-- 서체: 시스템 손글씨 계열 + Georgia italic 조합
-- 모션: 활활 타는 불꽃과 불티, 주사위처럼 상태를 설명하는 움직임에만 사용
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

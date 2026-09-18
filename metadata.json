@@ -1,0 +1,6 @@
+{
+  "name": "흑백 불태우기 게임",
+  "description": "연필 스케치와 목탄 화염으로 종이를 소각하는 흑백 예술 시뮬레이터. 첫 방문 시 형용사·명사·숫자 닉네임 슬롯 룰렛을 거쳐 게임에 진입합니다.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

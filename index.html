@@ -1,155 +1,18 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f2f0e9" />
-    <meta name="description" content="태우고 싶은 것을 불꽃으로 지워내는 감각적인 미니게임, Burn IT." />
-    <title>BurnIT</title>
-    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css" />
+    <title>흑백 불태우기 게임</title>
+    <meta name="description" content="연필 스케치와 목탄 화염으로 종이를 소각하는 흑백 예술 시뮬레이터. 첫 방문 시 형용사·명사·숫자 닉네임 슬롯 룰렛을 거쳐 게임에 진입합니다." />
+    <meta property="og:title" content="흑백 불태우기 게임" />
+    <meta property="og:description" content="연필 스케치와 목탄 화염으로 종이를 소각하는 흑백 예술 시뮬레이터. 첫 방문 시 형용사·명사·숫자 닉네임 슬롯 룰렛을 거쳐 게임에 진입합니다." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
-    <div class="paper-noise" aria-hidden="true"></div>
-    <header class="topbar">
-      <a class="brand" href="#" aria-label="Burn IT 처음으로">
-        <span class="brand-mark" aria-hidden="true">♨</span>
-        <span>Burn <em>IT</em></span>
-      </a>
-      <div class="identity">
-        <label class="sr-only" for="nickname">닉네임</label>
-        <input id="nickname" maxlength="18" autocomplete="nickname" aria-describedby="name-status" />
-        <button id="dice-button" class="icon-button" type="button" aria-label="랜덤 닉네임 다시 만들기" title="새 이름 굴리기">
-          <span class="dice" aria-hidden="true">⚄</span>
-        </button>
-        <button id="sound-button" class="icon-button sound-button" type="button" aria-label="불소리 켜기" aria-pressed="false">
-          <span aria-hidden="true">◒</span><span class="sound-label">SOUND OFF</span>
-        </button>
-      </div>
-    </header>
-
-    <main>
-      <section id="nickname-screen" class="nickname-screen" hidden aria-labelledby="nickname-title">
-        <div class="nickname-copy">
-          <p class="kicker">FIRST, PICK A NAME</p>
-          <h1 id="nickname-title">오늘의 이름을<br /><em>굴려보세요.</em></h1>
-          <p>로그인하지 않아도 괜찮아요.<br />이 이름과 태운 기록은 이 브라우저에만 남습니다.</p>
-        </div>
-        <div class="roulette-area">
-          <div class="slot-machine" aria-live="polite" aria-label="랜덤 닉네임 룰렛">
-            <div class="slot-window">
-              <div id="adjective-reel" class="slot-reel"><span>고요한</span></div>
-            </div>
-            <div class="slot-window">
-              <div id="noun-reel" class="slot-reel"><span>불씨</span></div>
-            </div>
-            <div class="slot-window number-window">
-              <div id="number-reel" class="slot-reel"><span>23</span></div>
-            </div>
-            <button id="lever-button" class="slot-lever" type="button" aria-label="닉네임 룰렛 돌리기">
-              <span class="lever-stick" aria-hidden="true"></span>
-              <span class="lever-knob" aria-hidden="true"></span>
-            </button>
-          </div>
-          <p id="roulette-result" class="roulette-result">레버를 당겨 이름을 만들어보세요.</p>
-          <div class="roulette-actions">
-            <button id="spin-button" class="text-button spin-button" type="button">한 번 굴리기 ↻</button>
-            <button id="accept-name-button" class="primary-button" type="button" disabled>
-              <span>이 이름으로 시작</span><span aria-hidden="true">↗</span>
-            </button>
-          </div>
-          <p class="local-note"><span aria-hidden="true">○</span> NO ACCOUNT · LOCAL ONLY</p>
-        </div>
-      </section>
-
-      <section id="intro-screen" class="intro-screen" hidden aria-labelledby="intro-title">
-        <div class="intro-copy">
-          <p class="kicker">A SMALL RITUAL FOR HEAVY THINGS</p>
-          <h1 id="intro-title">그냥, <em>태워버려.</em></h1>
-          <p class="intro-description">붙잡고 있던 생각도, 보기 싫은 이미지도.<br />불을 붙이고 재가 될 때까지 바라보세요.</p>
-          <button id="enter-button" class="primary-button" type="button">
-            <span>불 붙이기</span><span aria-hidden="true">↗</span>
-          </button>
-        </div>
-        <div class="intro-art" aria-hidden="true">
-          <span class="scribble scribble-one"></span>
-          <span class="scribble scribble-two"></span>
-          <div class="fire-poster">
-            <div class="drawn-flame flame-back"></div>
-            <div class="drawn-flame flame-front"></div>
-            <div class="fire-poster-label">BURN <em>IT</em></div>
-          </div>
-          <p class="hand-note">for the things<br />you can let go</p>
-        </div>
-      </section>
-
-      <section id="game-screen" class="game-screen" hidden aria-labelledby="game-title">
-        <div class="game-heading">
-          <div>
-            <p class="kicker">CHOOSE A STAGE · FIND EVERY POINT</p>
-            <h1 id="game-title">어디에 불을 <em>놓을까요?</em></h1>
-          </div>
-          <p id="greeting" class="greeting"></p>
-        </div>
-
-        <div class="mode-switch" role="tablist" aria-label="태우기 모드">
-          <button id="preset-tab" class="mode-tab active" type="button" role="tab" aria-selected="true">준비된 것</button>
-          <button id="upload-tab" class="mode-tab" type="button" role="tab" aria-selected="false">내 이미지</button>
-        </div>
-
-        <div class="workbench">
-          <aside class="source-panel" aria-label="태울 대상 선택">
-            <div id="preset-panel" class="preset-list">
-              <button class="preset active" type="button" data-preset="office">
-                <span class="preset-number">01</span><span><strong>야근 오피스</strong><small>점화 포인트 4곳</small></span>
-              </button>
-              <button class="preset" type="button" data-preset="meeting">
-                <span class="preset-number">02</span><span><strong>학교 본관</strong><small>점화 포인트 5곳</small></span>
-              </button>
-              <button class="preset" type="button" data-preset="workload">
-                <span class="preset-number">03</span><span><strong>회사 연구동</strong><small>점화 포인트 6곳</small></span>
-              </button>
-            </div>
-            <div id="upload-panel" class="upload-panel" hidden>
-              <input id="file-input" type="file" accept="image/png,image/jpeg,image/webp" hidden />
-              <button id="upload-zone" class="upload-zone" type="button">
-                <span class="upload-arrow" aria-hidden="true">↑</span>
-                <strong>이미지 올려놓기</strong>
-                <small>JPG, PNG, WEBP · 최대 10MB</small>
-              </button>
-              <p class="privacy-note">이미지는 이 브라우저 안에서만 처리됩니다.</p>
-            </div>
-          </aside>
-
-          <section class="burn-stage" aria-label="불태우기 영역">
-            <div class="stage-meta"><span id="stage-label">STAGE 01 · OVERTIME OFFICE</span><span id="burn-percent">0 / 4 LIT</span></div>
-            <div id="canvas-wrap" class="canvas-wrap">
-              <canvas id="burn-canvas" width="900" height="620" aria-label="불태울 이미지"></canvas>
-              <canvas id="fx-canvas" width="900" height="620" aria-hidden="true"></canvas>
-              <p id="stage-hint" class="stage-hint">주황색 점화 포인트를 모두 찾아 클릭하세요</p>
-              <div id="stage-clear" class="stage-clear" hidden>
-                <p>ALL POINTS IGNITED</p>
-                <h3>STAGE CLEAR</h3>
-                <span>잠시 불멍하고 다음 건물로 이동하세요.</span>
-                <button id="next-stage-button" type="button">다음 스테이지 →</button>
-              </div>
-            </div>
-            <div class="stage-controls">
-              <p id="burn-status" aria-live="polite">아직 아무것도 타지 않았어요.</p>
-              <button id="reset-button" class="text-button" type="button">처음부터 ↺</button>
-            </div>
-          </section>
-        </div>
-
-        <section class="history" aria-labelledby="history-title">
-          <div><p class="kicker">YOUR ASHES</p><h2 id="history-title">지난 기록</h2></div>
-          <ol id="history-list"></ol>
-        </section>
-      </section>
-    </main>
-
-    <footer><span>© BURN IT</span><span>무거운 것은 가볍게, 뜨거운 것은 안전하게.</span></footer>
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
+
