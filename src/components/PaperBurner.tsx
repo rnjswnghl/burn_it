@@ -218,9 +218,18 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
       canvasRef.current.style.width = `${width}px`;
       canvasRef.current.style.height = `${height}px`;
 
-      // Center the paper within the workbench
-      const paperW = Math.min(width - 60, Math.max(340, Math.min(540, width * 0.85)));
-      const paperH = Math.min(height - 60, Math.max(480, Math.min(720, height * 0.9)));
+      // Preserve the 3:4 document ratio at every viewport. Template artwork is
+      // authored on a 540×720 logical page and scales into these bounds.
+      const inset = width < 640 ? 28 : 60;
+      const maxPaperW = Math.max(1, width - inset);
+      const maxPaperH = Math.max(1, height - inset);
+      const paperAspect = 540 / 720;
+      let paperW = Math.min(540, maxPaperW);
+      let paperH = paperW / paperAspect;
+      if (paperH > maxPaperH) {
+        paperH = maxPaperH;
+        paperW = paperH * paperAspect;
+      }
       const paperX = Math.floor((width - paperW) / 2);
       const paperY = Math.floor((height - paperH) / 2);
 
@@ -232,9 +241,17 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
       };
     };
 
+    const container = containerRef.current;
+    if (!container) return;
+
     handleResize();
+    const resizeObserver = new ResizeObserver(handleResize);
+    resizeObserver.observe(container);
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Main Canvas Render & Physics Loop
@@ -353,6 +370,17 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
         // ----------------------------------------------------
         // 4. DRAWING CONTENT BASED ON TEMPLATE (into Paper Buffer)
         // ----------------------------------------------------
+        // Render every document in one stable logical coordinate system, then
+        // scale it to the responsive paper. This prevents fixed text and seals
+        // from escaping a shorter or narrower mobile canvas.
+        pCtx.save();
+        pCtx.translate(pb.x, pb.y);
+        pCtx.scale(pb.width / 540, pb.height / 720);
+        {
+          const pb = { x: 0, y: 0, width: 540, height: 720 };
+          const cx = pb.width / 2;
+          const cy = pb.height / 2;
+
         if (currentTemplate === 'sketch_butterfly') {
           // Butterfly & Rose Sketch
           pCtx.save();
@@ -668,6 +696,8 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
             pCtx.restore();
           }
         }
+        }
+        pCtx.restore();
 
         // ----------------------------------------------------
         // 5. PLAYER'S PENCIL STROKES (into Paper Buffer)
@@ -1379,7 +1409,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
   };
 
   return (
-    <div className="flex-1 w-full h-full flex flex-col bg-[#0c0a09] text-stone-200 overflow-hidden select-none">
+    <div className="flex-1 w-full min-h-0 flex flex-col bg-[#0c0a09] text-stone-200 overflow-visible md:h-full md:overflow-hidden select-none">
       {/* Top Studio Bar */}
       <div className="flex flex-wrap items-center justify-between px-2.5 sm:px-4 py-2 bg-[#1c1917] border-b border-[#292524] gap-2 shrink-0 z-10">
         {/* Nickname & Re-roll */}
@@ -1405,7 +1435,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
         </div>
 
         {/* Paper Templates */}
-        <div className="flex items-center flex-nowrap bg-stone-900/90 p-1 rounded-xl border border-stone-800 gap-1 w-full lg:w-auto overflow-x-auto scrollbar-none">
+        <div className="flex items-center flex-wrap lg:flex-nowrap bg-stone-900/90 p-1 rounded-xl border border-stone-800 gap-1 w-full lg:w-auto">
           <button
             type="button"
             onClick={() => resetPaper('sketch_butterfly')}
@@ -1666,7 +1696,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
       {/* Main Canvas Workspace */}
       <div
         ref={containerRef}
-        className="flex-1 w-full min-h-0 relative flex items-center justify-center overflow-hidden cursor-crosshair"
+        className="flex-1 w-full min-h-[520px] md:min-h-0 relative flex items-center justify-center overflow-hidden cursor-crosshair"
       >
         <canvas
           ref={canvasRef}
@@ -1682,7 +1712,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
       {/* Bottom Tool Palette Bar */}
       <div className="flex flex-wrap items-center justify-between px-2.5 sm:px-4 py-2 bg-[#1c1917] border-t border-[#292524] gap-2 shrink-0 z-10">
         {/* Fire Tools & Pencil Selection with Distinct Physics Profiles */}
-        <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto scrollbar-none w-full xl:w-auto">
+        <div className="flex items-center gap-1.5 flex-wrap xl:flex-nowrap w-full xl:w-auto">
           <span className="text-[11px] font-serif text-stone-400 hidden sm:inline mr-1">도구:</span>
 
           <button
@@ -1777,7 +1807,7 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
         </div>
 
         {/* Physical Fire Actions (Blow, Tap Ash, Extinguish, New Paper) */}
-        <div className="flex items-center gap-2 flex-nowrap overflow-x-auto scrollbar-none w-full xl:w-auto">
+        <div className="flex items-center gap-2 flex-wrap xl:flex-nowrap w-full xl:w-auto">
           {/* Blow air */}
           <button
             type="button"
@@ -1832,12 +1862,12 @@ export const PaperBurner: React.FC<PaperBurnerProps> = ({ nickname, onOpenRoulet
       {showGuide && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#1c1917] border-2 border-[#44403c] p-6 rounded-2xl max-w-md w-full shadow-2xl font-serif text-stone-300">
-            <h3 className="text-lg font-bold text-amber-400 mb-3 flex items-center gap-2">
-              <Flame className="w-5 h-5 text-amber-500" />
-              흑백 종이 소각 스튜디오 안내
+            <h3 className="text-base sm:text-lg leading-tight font-bold text-amber-400 mb-3 flex items-center gap-2 break-keep text-balance">
+              <Flame className="w-5 h-5 text-amber-500 shrink-0" />
+              <span>흑백 종이 소각 스튜디오 안내</span>
             </h3>
 
-            <div className="text-xs space-y-3 leading-relaxed text-stone-300">
+            <div className="text-xs space-y-3 leading-relaxed text-stone-300 break-keep text-pretty">
               <p>
                 목탄 드로잉과 스케치북 종이의 질감을 살린 사실적인 종이 소각 시뮬레이터입니다.
               </p>

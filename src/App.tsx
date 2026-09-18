@@ -78,7 +78,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-col w-full h-full min-h-screen bg-[#0c0a09] text-stone-200 overflow-hidden font-sans">
+      <div className="flex flex-col w-full h-dvh min-h-dvh bg-[#0c0a09] text-stone-200 overflow-x-hidden overflow-y-auto md:h-full md:min-h-screen md:overflow-hidden font-sans">
         {/* If no nickname is confirmed yet (first visit), start strictly with Nickname Slot Roulette */}
         {!confirmedNickname ? (
           <NicknameRoulette onConfirm={handleConfirmNickname} />
@@ -89,7 +89,7 @@ export default function App() {
               onOpenRoulette={() => setShowRouletteModal(true)}
             />
 
-            <main className="flex-1 w-full min-h-0 overflow-hidden relative flex flex-col">
+            <main className="flex-1 w-full min-h-0 overflow-visible md:overflow-hidden relative flex flex-col">
               <PaperBurner
                 nickname={confirmedNickname}
                 onOpenRoulette={() => setShowRouletteModal(true)}

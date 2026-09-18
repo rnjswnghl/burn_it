@@ -8,13 +8,3 @@ html, body, #root {
   overflow: hidden;
   background-color: #020617;
 }
-
-/* Keep compact tool rails scrollable without adding a second visual scrollbar. */
-.scrollbar-none {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
