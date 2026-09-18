@@ -1,7 +1,5 @@
 {
   "project_id": "appgprj_6aac94df2cfc8191be271ec9ca46e8e0",
-  "slug": "burnit",
-  "title": "BurnIT",
   "static": {
     "directory": "dist"
   }
