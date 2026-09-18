@@ -68,17 +68,17 @@
           <h1 id="intro-title">그냥, <em>태워버려.</em></h1>
           <p class="intro-description">붙잡고 있던 생각도, 보기 싫은 이미지도.<br />불을 붙이고 재가 될 때까지 바라보세요.</p>
           <button id="enter-button" class="primary-button" type="button">
-            <span>성냥 꺼내기</span><span aria-hidden="true">↗</span>
+            <span>불 붙이기</span><span aria-hidden="true">↗</span>
           </button>
         </div>
         <div class="intro-art" aria-hidden="true">
           <span class="scribble scribble-one"></span>
           <span class="scribble scribble-two"></span>
-          <div class="matchbox">
-            <div class="matchbox-label">BURN<br /><em>IT</em></div>
-            <div class="match-strike"></div>
+          <div class="fire-poster">
+            <div class="drawn-flame flame-back"></div>
+            <div class="drawn-flame flame-front"></div>
+            <div class="fire-poster-label">BURN <em>IT</em></div>
           </div>
-          <div class="loose-match"><i></i></div>
           <p class="hand-note">for the things<br />you can let go</p>
         </div>
       </section>
@@ -100,14 +100,14 @@
         <div class="workbench">
           <aside class="source-panel" aria-label="태울 대상 선택">
             <div id="preset-panel" class="preset-list">
-              <button class="preset active" type="button" data-preset="deadline">
-                <span class="preset-number">01</span><span><strong>마감</strong><small>자꾸만 따라오는 것</small></span>
+              <button class="preset active" type="button" data-preset="office">
+                <span class="preset-number">01</span><span><strong>야근 사무실</strong><small>불이 꺼지지 않는 곳</small></span>
               </button>
-              <button class="preset" type="button" data-preset="worry">
-                <span class="preset-number">02</span><span><strong>걱정</strong><small>아직 일어나지 않은 것</small></span>
+              <button class="preset" type="button" data-preset="meeting">
+                <span class="preset-number">02</span><span><strong>끝없는 회의</strong><small>결론 없이 길어진 시간</small></span>
               </button>
-              <button class="preset" type="button" data-preset="message">
-                <span class="preset-number">03</span><span><strong>그 메시지</strong><small>다시 읽지 않을 것</small></span>
+              <button class="preset" type="button" data-preset="workload">
+                <span class="preset-number">03</span><span><strong>쌓인 업무</strong><small>끝이 보이지 않는 서류</small></span>
               </button>
             </div>
             <div id="upload-panel" class="upload-panel" hidden>
@@ -126,8 +126,8 @@
             <div id="canvas-wrap" class="canvas-wrap">
               <canvas id="burn-canvas" width="900" height="620" aria-label="불태울 이미지"></canvas>
               <canvas id="fx-canvas" width="900" height="620" aria-hidden="true"></canvas>
-              <div id="match-cursor" class="match-cursor" aria-hidden="true"><i></i></div>
-              <p id="stage-hint" class="stage-hint">성냥으로 종이를 문질러 불을 붙이세요</p>
+              <div id="fire-cursor" class="fire-cursor" aria-hidden="true"><i></i><b></b></div>
+              <p id="stage-hint" class="stage-hint">불꽃을 끌어 답답한 장면을 활활 태우세요</p>
             </div>
             <div class="stage-controls">
               <p id="burn-status" aria-live="polite">아직 아무것도 타지 않았어요.</p>

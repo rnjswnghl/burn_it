@@ -2,7 +2,7 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 const adjectives = ["고요한", "단단한", "느긋한", "새벽의", "용감한", "가벼운", "반짝이는", "무심한", "따뜻한", "엉뚱한"];
-const nouns = ["성냥", "잿가루", "모닥불", "종이학", "고양이", "연기", "부싯돌", "달빛", "장작", "불씨"];
+const nouns = ["불꽃", "잿가루", "모닥불", "종이학", "고양이", "연기", "부싯돌", "달빛", "장작", "불씨"];
 const storageKey = "burnit:user:v1";
 const historyKey = "burnit:history:v1";
 function readLocal(key, fallback) {
@@ -14,7 +14,7 @@ let history = readLocal(historyKey, []);
 let pendingNickname = "";
 let rouletteSpinning = false;
 let currentMode = "preset";
-let currentPreset = "deadline";
+let currentPreset = "office";
 let sourceImage = null;
 let burning = false;
 let completed = false;
@@ -149,7 +149,7 @@ if (user.nickname) {
 $("#enter-button").addEventListener("click", () => {
   $("#intro-screen").hidden = true;
   $("#game-screen").hidden = false;
-  renderPreset("deadline");
+  renderPreset("office");
   renderHistory();
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
@@ -176,24 +176,110 @@ $$('.preset').forEach((button) => button.addEventListener("click", () => {
 
 function paperBase() {
   octx.clearRect(0, 0, original.width, original.height);
-  octx.fillStyle = "#e9e6dc";
+  octx.fillStyle = "#faf9f5";
   octx.fillRect(0, 0, original.width, original.height);
-  octx.strokeStyle = "rgba(25,25,22,.10)";
-  octx.lineWidth = 1;
-  for (let y = 24; y < 620; y += 27) {
-    octx.beginPath(); octx.moveTo(0, y); octx.lineTo(900, y); octx.stroke();
-  }
-  for (let i = 0; i < 500; i++) {
-    const shade = Math.floor(Math.random() * 50 + 120);
-    octx.fillStyle = `rgba(${shade},${shade},${shade},${Math.random() * .08})`;
-    octx.fillRect(Math.random() * 900, Math.random() * 620, Math.random() * 2 + .3, Math.random() * 2 + .3);
+  for (let i = 0; i < 1150; i++) {
+    const shade = Math.floor(Math.random() * 45 + 120);
+    octx.fillStyle = `rgba(${shade},${shade},${shade},${Math.random() * .045})`;
+    octx.fillRect(Math.random() * 900, Math.random() * 620, Math.random() * 2.4 + .2, Math.random() * .9 + .15);
   }
 }
 
-function inkLine(points, width = 4) {
-  octx.beginPath();
-  points.forEach(([x, y], index) => index ? octx.lineTo(x, y) : octx.moveTo(x, y));
-  octx.strokeStyle = "#1c1c19"; octx.lineWidth = width; octx.lineCap = "round"; octx.lineJoin = "round"; octx.stroke();
+function inkLine(points, width = 4, roughness = 1, passes = 2, alpha = .92) {
+  for (let pass = 0; pass < passes; pass++) {
+    octx.beginPath();
+    points.forEach(([x, y], index) => {
+      const jitter = () => (Math.random() - .5) * roughness * (pass + 1);
+      if (index) octx.lineTo(x + jitter(), y + jitter()); else octx.moveTo(x + jitter(), y + jitter());
+    });
+    octx.strokeStyle = `rgba(22,22,20,${alpha / passes + .18})`;
+    octx.lineWidth = Math.max(.65, width - pass * .55);
+    octx.lineCap = pass % 2 ? "square" : "round";
+    octx.lineJoin = "round";
+    octx.stroke();
+  }
+}
+
+function inkRect(x, y, width, height, lineWidth = 3, roughness = 1.5) {
+  inkLine([[x, y], [x + width, y], [x + width, y + height], [x, y + height], [x, y]], lineWidth, roughness, 2);
+}
+
+function hatch(x, y, width, height, spacing = 10, lineWidth = 1) {
+  octx.save();
+  octx.beginPath(); octx.rect(x, y, width, height); octx.clip();
+  for (let offset = -height; offset < width + height; offset += spacing) inkLine([[x + offset, y + height], [x + offset + height, y]], lineWidth, .8, 1, .42);
+  octx.restore();
+}
+
+function officeScene() {
+  inkLine([[-410, 205], [410, 205]], 5, 2.4, 3);
+  inkLine([[-410, -245], [410, -245]], 2, 1.5, 2, .55);
+  inkRect(-375, -205, 250, 180, 4, 2.4);
+  inkLine([[-250, -205], [-250, -25], [-375, -25], [-125, -25]], 2, 1.2, 2);
+  for (let x = -350; x < -130; x += 42) inkLine([[x, -195], [x, -38]], 1, 1.8, 1, .42);
+  hatch(-370, -200, 240, 170, 17, .8);
+  octx.font = "italic 22px Georgia"; octx.fillStyle = "#171715"; octx.textAlign = "left"; octx.fillText("still here · 21:47", -370, -218);
+  [-270, 45, 300].forEach((x, index) => {
+    const deskY = 92 + (index % 2) * 18;
+    inkLine([[x - 120, deskY], [x + 90, deskY]], 7, 3.2, 3);
+    inkLine([[x - 105, deskY], [x - 112, 196]], 3, 2, 2);
+    inkLine([[x + 74, deskY], [x + 83, 196]], 3, 2, 2);
+    inkRect(x - 55, deskY - 100, 105, 70, index === 1 ? 5 : 3, 2.6);
+    hatch(x - 50, deskY - 95, 95, 60, 13 + index * 3, .9);
+    inkLine([[x - 5, deskY - 30], [x - 5, deskY], [x - 34, deskY]], 3, 2, 2);
+    inkLine([[x + 70, deskY - 18], [x + 89, deskY - 44]], 2, 1.5, 2);
+  });
+  inkLine([[-70, -226], [-45, -183], [-10, -226], [25, -183], [62, -226]], 2, 2.2, 2);
+  octx.font = "italic 54px Georgia"; octx.textAlign = "center"; octx.fillText("OVERTIME", 128, -135);
+  $("#stage-label").textContent = "SUBJECT 01 · OVERTIME OFFICE";
+}
+
+function meetingScene() {
+  octx.font = "italic 30px Georgia"; octx.fillStyle = "#171715"; octx.textAlign = "center"; octx.fillText("MEETING #07 · no conclusion", 0, -220);
+  inkLine([[-360, 95], [-250, -85], [255, -85], [370, 95], [250, 190], [-250, 190], [-360, 95]], 6, 3.5, 3);
+  hatch(-270, -62, 540, 225, 19, 1.1);
+  [[-285,-130],[-95,-145],[100,-145],[290,-125],[-330,20],[330,20]].forEach(([x,y], index) => {
+    octx.beginPath(); octx.arc(x, y, 24 + index % 2 * 3, 0, Math.PI * 2); octx.strokeStyle = "#171715"; octx.lineWidth = index % 3 === 0 ? 5 : 2; octx.stroke();
+    inkLine([[x - 28, y + 64], [x, y + 27], [x + 30, y + 64]], 3 + index % 2, 3, 2);
+  });
+  inkRect(-87, -45, 174, 102, 3, 2.6);
+  octx.font = "italic 24px Georgia"; octx.fillText("another slide", 0, 5);
+  inkLine([[-180,-192],[-150,-218],[-120,-190]], 2, 2, 2);
+  inkLine([[185,-193],[215,-220],[245,-190]], 2, 2, 2);
+  for (let i = 0; i < 42; i++) {
+    octx.fillStyle = `rgba(23,23,21,${.2 + Math.random() * .5})`;
+    octx.fillRect(-390 + Math.random() * 780, 220 + Math.random() * 18, 1 + Math.random() * 5, 1 + Math.random() * 2);
+  }
+  $("#stage-label").textContent = "SUBJECT 02 · ENDLESS MEETING";
+}
+
+function workloadScene() {
+  inkLine([[-415, 210], [415, 210]], 7, 4, 3);
+  const piles = [
+    { x: -335, y: 155, count: 5, width: 245 },
+    { x: -110, y: 150, count: 8, width: 260 },
+    { x: 150, y: 160, count: 6, width: 220 },
+  ];
+  piles.forEach((pile, pileIndex) => {
+    for (let i = 0; i < pile.count; i++) {
+      const y = pile.y - i * 42;
+      const skew = (i % 3 - 1) * 7;
+      inkRect(pile.x + skew, y, pile.width - i % 2 * 18, 35, i % 3 === 0 ? 5 : 2, 2.8);
+      if (i % 2) hatch(pile.x + skew + 8, y + 6, pile.width - 30, 23, 16, .8);
+      inkLine([[pile.x + skew + 20, y + 13], [pile.x + skew + pile.width * .68, y + 13]], i % 3 === 0 ? 2.5 : 1, 2, 2);
+    }
+    if (pileIndex === 1) {
+      octx.font = "italic 31px Georgia"; octx.fillStyle = "#171715"; octx.textAlign = "center"; octx.fillText("URGENT", pile.x + pile.width / 2, pile.y - pile.count * 42 - 12);
+    }
+  });
+  octx.font = "italic 29px Georgia"; octx.textAlign = "left"; octx.fillText("today's workload", -400, -225);
+  inkLine([[-398,-210],[-160,-210]], 2, 1.5, 2);
+  for (let i = 0; i < 55; i++) {
+    const x = -410 + Math.random() * 820; const y = -195 + Math.random() * 380;
+    octx.fillStyle = `rgba(23,23,21,${.18 + Math.random() * .42})`;
+    octx.beginPath(); octx.arc(x, y, .5 + Math.random() * 1.6, 0, Math.PI * 2); octx.fill();
+  }
+  $("#stage-label").textContent = "SUBJECT 03 · THE WORKLOAD";
 }
 
 function renderPreset(name) {
@@ -201,26 +287,9 @@ function renderPreset(name) {
   paperBase();
   octx.save();
   octx.translate(450, 310);
-  if (name === "deadline") {
-    octx.strokeStyle = "#1c1c19"; octx.lineWidth = 5; octx.strokeRect(-190, -128, 380, 256);
-    octx.font = "italic 42px Georgia"; octx.textAlign = "center"; octx.fillStyle = "#1c1c19"; octx.fillText("DUE YESTERDAY", 0, -55);
-    octx.font = "140px Georgia"; octx.fillText("23:59", 0, 65);
-    inkLine([[-170, 92], [170, 92]], 3);
-    $("#stage-label").textContent = "SUBJECT 01 · DEADLINE";
-  } else if (name === "worry") {
-    for (let i = 0; i < 34; i++) {
-      octx.beginPath(); octx.arc(Math.cos(i) * i * 5, Math.sin(i * 1.8) * i * 3, 18 + i * 2, 0, Math.PI * 1.7); octx.strokeStyle = `rgba(28,28,25,${.18 + i / 65})`; octx.lineWidth = 2; octx.stroke();
-    }
-    octx.font = "italic 46px Georgia"; octx.textAlign = "center"; octx.fillStyle = "#1c1c19"; octx.fillText("WHAT IF?", 0, 15);
-    $("#stage-label").textContent = "SUBJECT 02 · WORRY";
-  } else {
-    octx.rotate(-.035); octx.strokeStyle = "#1c1c19"; octx.lineWidth = 4; octx.strokeRect(-220, -120, 440, 240);
-    octx.font = "22px Segoe Print"; octx.fillStyle = "#1c1c19"; octx.textAlign = "left";
-    octx.fillText("읽지 않은 메시지  1", -180, -65); inkLine([[-180,-40],[170,-40]], 2);
-    octx.font = "italic 34px Georgia"; octx.fillText("우리 얘기 좀 하자.", -180, 20);
-    octx.font = "18px Segoe Print"; octx.fillStyle = "#6a6861"; octx.fillText("오후 11:47", 95, 82);
-    $("#stage-label").textContent = "SUBJECT 03 · THE MESSAGE";
-  }
+  if (name === "office") officeScene();
+  else if (name === "meeting") meetingScene();
+  else workloadScene();
   octx.restore();
   sourceImage = null;
   startDrawLoop();
@@ -254,7 +323,7 @@ function loadFile(file) {
       octx.drawImage(image, (900 - width) / 2, (620 - height) / 2, width, height);
       octx.strokeStyle = "#171715"; octx.lineWidth = 4; octx.strokeRect((900 - width) / 2, (620 - height) / 2, width, height);
       $("#stage-label").textContent = `SUBJECT · ${file.name.slice(0, 24).toUpperCase()}`;
-      startDrawLoop(); showToast("준비됐어요. 성냥으로 문질러보세요.");
+      startDrawLoop(); showToast("준비됐어요. 불꽃으로 활활 태워보세요.");
     };
     image.src = reader.result;
   };
@@ -267,27 +336,27 @@ function canvasPoint(event) {
 }
 
 const wrap = $("#canvas-wrap");
-wrap.addEventListener("pointerenter", () => $("#match-cursor").style.opacity = 1);
-wrap.addEventListener("pointerleave", () => { $("#match-cursor").style.opacity = 0; burning = false; lastPoint = null; });
+wrap.addEventListener("pointerenter", () => $("#fire-cursor").style.opacity = 1);
+wrap.addEventListener("pointerleave", () => { $("#fire-cursor").style.opacity = 0; burning = false; lastPoint = null; });
 wrap.addEventListener("pointermove", (event) => {
   const rect = wrap.getBoundingClientRect();
-  const cursor = $("#match-cursor");
-  cursor.style.left = `${event.clientX - rect.left - 54}px`; cursor.style.top = `${event.clientY - rect.top}px`;
+  const cursor = $("#fire-cursor");
+  cursor.style.left = `${event.clientX - rect.left - 21}px`; cursor.style.top = `${event.clientY - rect.top - 40}px`;
   if (!burning || completed) return;
   const point = canvasPoint(event);
   if (!lastPoint || Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y) > 6) {
-    burnPoints.push({ ...point, radius: 6, maxRadius: 58 + Math.random() * 30, life: 0, seed: Math.random() * 900, phase: Math.random() * Math.PI * 2 });
-    for (let i = 0; i < 4; i++) particles.push({ x: point.x, y: point.y, vx: (Math.random() - .5) * 2.3, vy: -Math.random() * 3.3 - .8, life: 35 + Math.random() * 42, ember: Math.random() > .42 });
+    burnPoints.push({ ...point, radius: 8, maxRadius: 68 + Math.random() * 42, life: 0, seed: Math.random() * 900, phase: Math.random() * Math.PI * 2 });
+    for (let i = 0; i < 10; i++) particles.push({ x: point.x + (Math.random() - .5) * 20, y: point.y, vx: (Math.random() - .5) * 3.2, vy: -Math.random() * 4.8 - 1.2, life: 44 + Math.random() * 64, ember: Math.random() > .28 });
     lastPoint = point;
   }
 });
 wrap.addEventListener("pointerdown", (event) => {
   if (completed) return;
   wrap.setPointerCapture(event.pointerId); burning = true; lastPoint = null;
-  $("#match-cursor").classList.add("lit"); $("#stage-hint").style.opacity = 0;
+  $("#fire-cursor").classList.add("lit"); $("#stage-hint").style.opacity = 0;
   ensureAudio();
 });
-wrap.addEventListener("pointerup", (event) => { burning = false; lastPoint = null; $("#match-cursor").classList.remove("lit"); if (wrap.hasPointerCapture(event.pointerId)) wrap.releasePointerCapture(event.pointerId); });
+wrap.addEventListener("pointerup", (event) => { burning = false; lastPoint = null; $("#fire-cursor").classList.remove("lit"); if (wrap.hasPointerCapture(event.pointerId)) wrap.releasePointerCapture(event.pointerId); });
 
 function startDrawLoop() {
   if (renderLoopStarted) return;
@@ -364,19 +433,19 @@ function flamePath(target, x, y, width, height, lean, flicker) {
 }
 
 function drawLivingFire(point, index, time) {
-  if (point.radius < 17 || point.life > 78 || index % 6) return;
+  if (point.radius < 14 || point.life > 132 || index % 2) return;
   const angle = -Math.PI / 2 + Math.sin(point.seed) * .92;
   const edgeX = point.x + Math.cos(angle) * point.radius * .82;
   const edgeY = point.y + Math.sin(angle) * point.radius * .72;
   const flicker = Math.sin(time * .012 + point.phase) * 8;
-  const height = 27 + (point.seed % 31) + Math.sin(time * .019 + point.seed) * 9;
-  const width = 12 + (point.seed % 10);
-  const lean = Math.sin(time * .007 + point.seed) * 10;
+  const height = 46 + (point.seed % 45) + Math.sin(time * .019 + point.seed) * 15;
+  const width = 18 + (point.seed % 16);
+  const lean = Math.sin(time * .007 + point.seed) * 16;
 
   fctx.save();
   fctx.globalCompositeOperation = "lighter";
   fctx.shadowColor = "rgba(255,82,0,.8)";
-  fctx.shadowBlur = 18;
+  fctx.shadowBlur = 30;
   flamePath(fctx, edgeX, edgeY, width, height, lean, flicker);
   const flame = fctx.createLinearGradient(edgeX, edgeY, edgeX, edgeY - height);
   flame.addColorStop(0, "rgba(190,24,0,.9)");
@@ -393,6 +462,18 @@ function drawLivingFire(point, index, time) {
   core.addColorStop(1, "rgba(255,130,0,0)");
   fctx.fillStyle = core;
   fctx.fill();
+
+  if (index % 4 === 0) {
+    const sideX = edgeX + Math.sin(point.seed) * 26;
+    const sideHeight = height * (.58 + Math.sin(time * .013 + point.seed) * .12);
+    flamePath(fctx, sideX, edgeY + 4, width * .66, sideHeight, -lean * .45, -flicker * .35);
+    const side = fctx.createLinearGradient(sideX, edgeY, sideX, edgeY - sideHeight);
+    side.addColorStop(0, "rgba(205,35,0,.92)");
+    side.addColorStop(.46, "rgba(255,111,0,.95)");
+    side.addColorStop(1, "rgba(255,196,52,0)");
+    fctx.fillStyle = side;
+    fctx.fill();
+  }
   fctx.restore();
 }
 
@@ -420,17 +501,18 @@ function drawFrame() {
   fctx.clearRect(0, 0, 900, 620);
   const time = performance.now();
   burnPoints.forEach((point, index) => {
-    point.life += burning ? 1 : .34;
-    point.radius = Math.min(point.maxRadius, point.radius + (burning ? .48 : .17));
-    if (point.radius > 19 && point.life < 100 && Math.random() > .91) particles.push({ x: point.x + (Math.random() - .5) * point.radius * 1.4, y: point.y - point.radius * .25, vx: (Math.random() - .5) * 1.7, vy: -Math.random() * 2.5, life: 30 + Math.random() * 46, ember: Math.random() > .48 });
+    point.life += burning ? .82 : .24;
+    point.radius = Math.min(point.maxRadius, point.radius + (burning ? .58 : .22));
+    if (point.radius > 16 && point.life < 138 && Math.random() > .7) particles.push({ x: point.x + (Math.random() - .5) * point.radius * 1.6, y: point.y - point.radius * .2, vx: (Math.random() - .5) * 2.5, vy: -Math.random() * 4.2 - .6, life: 38 + Math.random() * 62, ember: Math.random() > .32 });
     drawLivingFire(point, index, time);
   });
   particles = particles.filter((p) => p.life > 0);
   particles.forEach((p) => {
     p.x += p.vx; p.y += p.vy; p.vx *= .992; p.vy -= .018; p.life--;
     fctx.globalAlpha = Math.min(1, p.life / 20);
-    fctx.fillStyle = p.ember && p.life > 17 ? "#ff7a00" : "#221a15";
-    fctx.beginPath(); fctx.ellipse(p.x, p.y, p.ember ? 1.7 : 2.4, p.ember ? 2.6 : 1.2, p.vx, 0, Math.PI * 2); fctx.fill();
+    fctx.fillStyle = p.ember && p.life > 17 ? (p.life % 3 > 1 ? "#ffb000" : "#ff4d00") : "#221a15";
+    fctx.shadowColor = p.ember ? "#ff6a00" : "transparent"; fctx.shadowBlur = p.ember ? 8 : 0;
+    fctx.beginPath(); fctx.ellipse(p.x, p.y, p.ember ? 2.2 : 2.7, p.ember ? 4.1 : 1.5, p.vx, 0, Math.PI * 2); fctx.fill();
   });
   fctx.globalAlpha = 1;
   updateCoverage();
@@ -441,8 +523,8 @@ function drawFrame() {
 }
 
 function finishBurn() {
-  completed = true; burning = false; $("#match-cursor").classList.remove("lit");
-  const subject = currentMode === "upload" ? "내 이미지" : { deadline: "마감", worry: "걱정", message: "그 메시지" }[currentPreset];
+  completed = true; burning = false; $("#fire-cursor").classList.remove("lit");
+  const subject = currentMode === "upload" ? "내 이미지" : { office: "야근 사무실", meeting: "끝없는 회의", workload: "쌓인 업무" }[currentPreset];
   history.unshift({ subject, date: new Date().toISOString(), by: user.nickname }); history = history.slice(0, 6);
   localStorage.setItem(historyKey, JSON.stringify(history)); renderHistory();
   $("#burn-status").textContent = "다 탔어요. 이제 조금 가벼워졌기를.";
